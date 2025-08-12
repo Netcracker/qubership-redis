@@ -1,0 +1,72 @@
+{{- if .Values.disasterRecovery.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: project-configuration
+  labels:
+    managedBy: cluster-replicator
+data:
+  replicate: |
+    exclude:
+      - entity: "deployment.apps/v1"
+        filters:
+          - type: "IgnoreEntityByField"
+            jsonPath: "$.metadata.name"
+            values:
+              - "dbaas-redis-operator"
+              - "redis-monitoring-agent"
+      - entity: "service/v1"
+        filters:
+          - type: "RemoveField"
+            jsonPath: "$.spec.clusterIP"
+          - type: "RemoveField"
+            jsonPath: "$.spec.clusterIPs"
+          - type: "IgnoreEntityByField"
+            jsonPath: "$.metadata.name"
+            values:
+              - "dbaas-redis-adapter"
+              - "redis-monitoring-agent"
+      - entity: "secret/v1"
+        filters:
+          - type: "IgnoreEntityByField"
+            jsonPath: "$.metadata.labels.owner"
+            values:
+              - "helm"
+          - type: "IgnoreEntityByField"
+            jsonPath: "$.metadata.name"
+            values:
+              - "dbaas-aggregator-credentials"
+              - "dbaas-adapter-credentials"
+      - entity: "configmap/v1"
+        filters:
+          - type: "IgnoreEntityByField"
+            jsonPath: "$.metadata.name"
+            values:
+              - "kube-root-ca.crt"
+              - "last-applied-configuration-info"
+              - "project-configuration"
+              - "redis-default-conf"
+              - "redis-monitoring-agent-config"
+              - "resource-profile-replicator"
+              - "tests-config"
+              - "hashversion"
+              - "version"
+              - "cdnmaplist"
+      - entity: "serviceaccount/v1"
+      - entity: "ingress.extensions/v1beta1"
+        filters:
+          - type: "RemoveField"
+            jsonPath: "$.spec.status"
+      - entity: "ingress.networking.k8s.io/v1"
+        filters:
+          - type: "RemoveField"
+            jsonPath: "$.spec.status"
+      - entity: "role.rbac.authorization.k8s.io/v1"
+      - entity: "rolebinding.rbac.authorization.k8s.io/v1"
+      - entity: "facadeservice.qubership.org/v1alpha"
+      - entity: "cronjob.batch/v1beta1"
+      - entity: "job.batch/v1"
+      - entity: "daemonset.apps/v1"
+      - entity: "statefulset.apps/v1"
+      - entity: "horizontalpodautoscaler.autoscaling/v1"
+{{- end }}

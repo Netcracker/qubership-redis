@@ -1,0 +1,70 @@
+{{- if eq (include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.monitoringAgent.install "envVar" .Values.MONITORING_ENABLED "default" true )) "true" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-monitoring-agent-config
+  labels:
+    name: redis-monitoring-agent
+    {{- include "redis.defaultLabels" . | nindent 4 }}
+data:
+  telegraf-init: >-
+    [tags]
+
+
+    [agent]
+      interval = "30s"
+      round_interval = true
+      metric_batch_size = 1000
+      metric_buffer_limit = 10000
+      collection_jitter = "0s"
+      flush_interval = "30s"
+      flush_jitter = "0s"
+      debug = false
+      quiet = false
+      hostname = "$NAMESPACE"
+      omit_hostname = false
+  
+  telegraf-outputs: >-
+    
+    [outputs]
+    
+{{- if eq .Values.monitoringAgent.metricCollector "prometheus" }}
+
+    [[ outputs.prometheus_client ]]
+      listen = ":9273"
+{{ else }}
+
+    [[outputs.influxdb]]
+      urls = ["$INFLUXDB_HOST"]
+      database = "$INFLUXDB_DATABASE"
+      precision = "s"
+      retention_policy = "$INFLUXDB_RETENTION_POLICY"
+      write_consistency = "any"
+      timeout = "20s"
+      username = "$INFLUXDB_USER"
+      password = "$INFLUXDB_PASSWORD"
+{{ end }}
+  
+  telegraf-inputs: >-
+    
+    # Configured for TELEGRAF_REDIS_PREFIX_DBNAME
+    
+    [[inputs.redis]]
+      servers = ["tcp://TELEGRAF_REDIS_PREFIX_DBSERVICE:TELEGRAF_REDIS_PREFIX_DBPORT"]
+      password = "TELEGRAF_REDIS_PREFIX_DBPASS"
+      fielddrop = ["total_connections_received", "total_net_input_bytes", "total_net_output_bytes", "maxmemory_policy", "mem_fragmentation_ratio", "lru_clock", "aof_*", "rdb_*", "sync_*", "migrate_cached_sockets", "keyspace_hits", "keyspace_misses", "latest_fork_usec", "role", "master_*", "second_*", "repl_*", "connected_slaves"]
+      
+  {{- if .Values.redis.tls.enabled }}
+      tls_ca = "/usr/ssl/ca.crt"
+      insecure_skip_verify = true
+  {{ end }}
+
+    [[inputs.exec]]
+      commands = [
+        "sh /opt/telegraf/scripts/get_metrics.sh $NAMESPACE 5 TELEGRAF_REDIS_PREFIX_DBSERVICE TELEGRAF_REDIS_PREFIX_DBPORT TELEGRAF_REDIS_PREFIX_DBPASS {{ .Values.redis.tls.enabled }}"
+      ]
+      data_format = "influx"
+      timeout = "10s"
+    # End TELEGRAF_REDIS_PREFIX_DBNAME
+
+{{ end }}

@@ -1,0 +1,16 @@
+{{- if eq (include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.monitoringAgent.install "envVar" .Values.MONITORING_ENABLED "default" true )) "true" }}
+  {{- if eq .Values.monitoringAgent.metricCollector "prometheus" }}
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: redis-grafana-dashboard
+  labels:
+    app: grafana
+    {{- include "redis.defaultLabels" . | nindent 4 }}
+  annotations:
+spec:
+  name: redis-{{ .Release.Namespace }}.json
+  json: >
+{{ .Files.Get "monitoring/grafana-dashboard.json" | indent 4 }}
+  {{ end }}
+{{ end }}

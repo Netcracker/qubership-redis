@@ -1,0 +1,27 @@
+{{- if eq (include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.monitoringAgent.install "envVar" .Values.MONITORING_ENABLED "default" true )) "true" }}
+  {{- if eq .Values.monitoringAgent.metricCollector "prometheus" }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/managed-by: monitoring-operator
+    app.kubernetes.io/name: "redis-prometheus-exporter-service-monitor"
+    k8s-app: "redis-prometheus-exporter-service-monitor"
+  name: "redis-prometheus-exporter-service-monitor"
+spec:
+  endpoints:
+    - interval: {{ .Values.monitoringAgent.monitoringInterval }}
+      port: http
+      metricRelabelings:
+        - action: labeldrop
+          regex: 'errorstat_.*'
+  jobLabel: k8s-app
+  namespaceSelector:
+    matchNames:
+      - {{ default "redis" .Release.Namespace }}
+  selector:
+    matchLabels:
+      app: redis-monitoring-agent
+  {{ end }}
+{{ end }}

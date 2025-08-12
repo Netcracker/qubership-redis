@@ -1,0 +1,17 @@
+{{- if .Values.disasterRecovery.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: replicator-namespace-replication-role-binding
+  labels:
+    managedBy: cluster-replicator
+subjects:
+  - kind: ServiceAccount
+    name: cluster-replicator
+    apiGroup: ""
+    namespace: {{ .Values.disasterRecovery.replicatorNamespace }}
+roleRef:
+  kind: Role
+  name: replicator-{{ .Release.Namespace }}-replication-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

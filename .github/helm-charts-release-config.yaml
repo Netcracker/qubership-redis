@@ -1,0 +1,11 @@
+---
+
+charts:
+  - name: qubership-redis-operator
+    chart_file: redis-operator/charts/helm/redis-operator/Chart.yaml
+    values_file: redis-operator/charts/helm/redis-operator/values.yaml
+    image:
+      - ghcr.io/netcracker/qubership-redis-operator:${release}
+      - ghcr.io/netcracker/qubership-redis-monitoring-agent:${release}
+      - ghcr.io/netcracker/qubership-redis-tests:${release}
+      - ghcr.io/netcracker/qubership-redis-transfer:${release}

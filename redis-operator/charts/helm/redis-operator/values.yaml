@@ -1,0 +1,238 @@
+## Default values for helm-chart.
+## This is a YAML-formatted file.
+## Declare variables to be passed into your templates.
+#
+
+DEPLOY_W_HELM: true
+name: dbaas-redis-service
+global:
+  profile: ""
+
+waitTimeout: 200
+serviceAccountName: dbaas-redis-operator
+
+# tolerations Example
+# policies:
+#   tolerations:
+#   - key: "key"
+#     operator: "Equal"
+#     value: "value"
+#     effect: "NoSchedule"
+
+securityContext:
+  fsGroup: 1001
+  runAsUser: 1001
+  supplementalGroups:
+
+imagePullPolicy: IfNotPresent
+
+operator:
+  dockerImage: ghcr.io/netcracker/qubership-redis-operator:feature_initial
+  initImage: to_replace
+  priorityClassName: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+dbaas:
+  install: true
+  createIngress: false
+  adapter:
+    username: dbaas-aggregator
+    password: dbaas-aggregator
+    secretName: dbaas-adapter-credentials
+    apiVersion: v2
+    createDBTimeout: 60
+  aggregator:
+    username: cluster-dba
+    password: Bnmq5567_PO
+    vaultPasswordPath:
+    secretName: dbaas-aggregator-credentials
+    address: "http://dbaas-aggregator.dbaas:8080"
+    physicalDatabaseIdentifier: "redis"
+    physicalDatabaseLabels:
+    dbaasAggregatorRegistrationAddress: "http://dbaas-aggregator.dbaas:8080"
+  tls:
+    dbaasAdapterCASecretName: dbaas-adapter-certificate
+    duration: 365
+    subjectAlternativeName:
+      additionalDnsNames: [ ]
+      additionalIpAddresses: [ ]
+    certificates:
+      tls_key:
+      tls_crt:
+
+
+redis:
+  tls:
+    enabled: false
+    tlsPort: 6379
+    nonTlsPort: 0
+    certificateSecretName: root-ca
+    rootCAFileName: ca.crt
+    privateKeyFileName: tls.key
+    signedCRTFileName: tls.crt
+    generateCerts:
+      enabled: false
+      clusterIssuerName: ""
+      duration: 365
+    certificates:
+      tls_key:
+      tls_crt:
+      ca_crt:
+  password: redis
+  secretName: redis-credentials
+  dockerImage: "redis:7.4.2-alpine"
+  priorityClassName: ""
+  nodeLabels:
+  parameters:
+    label: redis-dbaas-adapter
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  #default values for redis
+  conf:
+    bind: "0.0.0.0"
+    protected-mode: "yes"
+    port: "6379"
+    tcp-backlog: "511"
+    timeout: "0"
+    tcp-keepalive: "300"
+    daemonize: "no"
+    supervised: "no"
+    loglevel: "notice"
+    logfile: "\"\""
+    databases: "16"
+    stop-writes-on-bgsave-error: "no"
+    rdbcompression: "yes"
+    rdbchecksum: "no"
+    dbfilename: "dump.rdb"
+    dir: "/var/lib/redis/data"
+    appendonly: "no"
+    appendfilename: "\"appendonly.aof\""
+    appendfsync: "no"
+    no-appendfsync-on-rewrite: "no"
+    auto-aof-rewrite-percentage: "100"
+    auto-aof-rewrite-min-size: "64mb"
+    aof-load-truncated: "yes"
+    lua-time-limit: "5000"
+    cluster-enabled: "no"
+    slowlog-log-slower-than: "-1"
+    slowlog-max-len: "128"
+    latency-monitor-threshold: "0"
+    notify-keyspace-events: "\"\""
+    hash-max-ziplist-entries: "512"
+    hash-max-ziplist-value: "64"
+    list-max-ziplist-size: "-2"
+    list-compress-depth: "0"
+    set-max-intset-entries: "512"
+    zset-max-ziplist-entries: "128"
+    zset-max-ziplist-value: "64"
+    hll-sparse-max-bytes: "3000"
+    activerehashing: "yes"
+    client-output-buffer-limit: "normal 0 0 0\nclient-output-buffer-limit slave 256mb 64mb 60\nclient-output-buffer-limit pubsub 32mb 8mb 60"
+    hz: "10"
+    aof-rewrite-incremental-fsync: "yes"
+    maxmemory: 200mb
+    maxmemory-policy: "allkeys-lru"
+    maxmemory-samples: "5"
+    tls-auth-clients: "no"
+    maxclients: "50000"
+
+monitoringAgent:
+  install: true
+  dockerImage: ghcr.io/netcracker/qubership-redis-monitoring-agent:feature_initial
+  priorityClassName: ""
+  nodeLabels:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+  metricCollector: prometheus
+  monitoringInterval: 20s
+  # Credentials
+  influxDB:
+    host: "host"
+    database: "database"
+    retentionPolicy: default
+    user: admin
+    password: admin
+    vaultPasswordPath:
+    secretName: redis-monitoring-agent-client-secret
+  prometheus:
+    alerts:
+      cpuThreshold: 95
+      memThreshold: 95
+      latencyThresholdMs: 20
+      connectionsThreshold: 90
+
+vaultRegistration:
+  dockerImage: "banzaicloud/vault-env:1.19.0"
+  enabled: false
+  path: kv/redis
+  url:
+  role: redis-role
+  method: kubernetes
+  initContainerResources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 20m
+      memory: 64Mi
+
+disasterRecovery:
+  enabled: false
+  replicatorNamespace: replicator-dc1
+
+robotTests:
+  install: false
+  dockerImage: ghcr.io/netcracker/qubership-redis-tests:feature_initial
+  priorityClassName: ""
+  tags:
+  nodeLabels:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+role:
+  # Specifies whether a role should be created
+  create: yes
+
+roleBinding:
+  # Specifies whether a roleBinding should be created
+  create: yes
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: yes
+
+crd:
+  # Specifies whether a dbaas-redis-service CRD should be created
+  create: no
+
+# Cloud Release Integration
+# The name of the Service exposed for the database.
+SERVICE_NAME: 'dbaas-redis-operator'
+# Microservice belonging to a group
+PART_OF: 'dbaas-redis-operator'
+# Delimiter for labels
+DELIMITER: "-"
+# Artifact descriptor version which is installed.
+ARTIFACT_DESCRIPTOR_VERSION: "" # TO_BE_REPLACED
+MANAGED_BY: "operator"
