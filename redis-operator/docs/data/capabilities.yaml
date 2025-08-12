@@ -1,0 +1,93 @@
+Service: Redis
+DeploymentSchemas:
+  Non-HA:
+    Supported: yes
+    Environment:
+      - Kubernetes
+      - Openshift
+    Note: additional info
+  With DbaaS:
+    Supported: yes
+    Environment:
+      - Kubernetes
+      - Openshift
+    Note: Redis instances are created on demand by request from DbaaS
+  HA:
+    Supported: no
+  DR:
+    Supported: no
+Installation:
+  Helm:
+    Supported: yes
+    Environment:
+      - Kubernetes
+      - Openshift
+    FullyAutomated: yes
+  AppDeployer:
+    Supported: yes
+    Environment:
+      - Kubernetes
+      - Openshift
+    FullyAutomated: yes
+  Ansible:
+    Supported: no
+Upgrade:
+  Helm:
+    Supported: yes
+    Environment:
+      - Kubernetes
+      - Openshift
+    FullyAutomated: yes
+    Downtime: yes
+  AppDeployer:
+    Supported: yes
+    Environment:
+      - Kubernetes
+      - Openshift
+    FullyAutomated: yes
+    Downtime: yes
+  Ansible:
+    Supported: no
+BackupRestore:
+  FullBackup:
+    Supported: no
+    Snapshots: no
+  BackupPerSchema:
+    Supported: no
+    Snapshots: no
+  IncrementalBackup:
+    Supported: no
+    Snapshots: no
+  IncrementalBackupPerSchema:
+    Supported: no
+    Snapshots: no
+  FullRestore:
+    Supported: no
+    Snapshots: no
+    Downtime: yes
+  RestorePerSchema:
+    Supported: yes
+    Snapshots: yes
+  PointInTimeRecovery:
+    Supported: no
+    Snapshots: no
+  PointInTimeRecoveryPerSchema:
+    Supported: no
+    Snapshots: no
+Storage:
+  Supported: no
+Security:
+  IdP:
+    Supported: no
+  Transport:
+    - Insecure
+    - TLS
+  Note: integration with Cert Manager
+ManagedServices:
+  AWS:
+    - Memory DB
+    - ElastiCache
+  Azure:
+    - Cache for Redis
+  GCP:
+    - Redis

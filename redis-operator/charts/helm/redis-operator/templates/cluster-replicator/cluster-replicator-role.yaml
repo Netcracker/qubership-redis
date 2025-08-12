@@ -1,0 +1,43 @@
+{{- if .Values.disasterRecovery.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: replicator-{{ .Release.Namespace }}-replication-role
+  labels:
+    managedBy: cluster-replicator
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - configmaps
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - create
+      - delete
+  - apiGroups:
+      - apps
+      - extensions
+    resources:
+      - deployments
+      - deployments/scale
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - create
+      - delete
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+    verbs:
+      - list
+{{- end }}

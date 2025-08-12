@@ -1,0 +1,24 @@
+{{- if and .Values.redis.tls.enabled .Values.redis.tls.generateCerts.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-tls-certificate
+spec:
+  secretName: {{ .Values.redis.tls.certificateSecretName }}
+  duration: {{ default 365 .Values.redis.tls.generateCerts.duration | mul 24 }}h
+  commonName: redis-cn
+  isCA: true
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  issuerRef:
+    group: cert-manager.io
+  {{- if .Values.redis.tls.generateCerts.clusterIssuerName }}
+    name: {{ .Values.redis.tls.generateCerts.clusterIssuerName }}
+    kind: ClusterIssuer
+  {{- else }}
+    name: redis-tls-issuer
+    kind: Issuer
+  {{- end }}
+{{- end }}

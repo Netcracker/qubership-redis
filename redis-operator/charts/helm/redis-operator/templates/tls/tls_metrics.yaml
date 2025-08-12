@@ -1,0 +1,19 @@
+{{- if eq (include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.monitoringAgent.install "envVar" .Values.MONITORING_ENABLED "default" true )) "true" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: monitoring
+    prometheus: {{ .Release.Namespace }}-redis-tls-static-metrics-rules
+    role: record-rules
+  name: {{ .Release.Namespace }}-redis-tls-static-metrics-rules
+spec:
+  groups:
+    - name: {{ .Release.Namespace }}-{{ .Release.Name }}
+      partial_response_strategy: ''
+      rules:
+        {{- include "global.tlsStaticMetric" (dict "namespace" .Release.Namespace "application" "Redis" "service" "Redis" "enabledSsl" .Values.redis.tls.enabled "secret" .Values.redis.tls.certificateSecretName "certProvider" "cert-manager" "certificate" "redis-tls-certificate") | nindent 8 }}
+        {{- if eq (include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.dbaas.install "envVar" .Values.DBAAS_ENABLED "default" true )) "true" }}
+        {{- include "global.tlsStaticMetric" (dict "namespace" .Release.Namespace "application" "Redis" "service" "Redis Dbaas Adapter" "enabledSsl" (and .Values.redis.tls.enabled (hasPrefix "https" .Values.dbaas.aggregator.dbaasAggregatorRegistrationAddress)) "secret" .Values.dbaas.tls.dbaasAdapterCASecretName "certProvider" "cert-manager" "certificate" "dbaas-tls-certificate") | nindent 8 }}
+        {{- end }}
+{{- end }}

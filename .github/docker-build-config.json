@@ -1,0 +1,26 @@
+{
+  "components": [
+    {
+      "name": "qubership-redis-operator",
+      "file": "redis-operator/Dockerfile",
+      "context": "redis-operator"
+    },
+
+    {
+      "name": "qubership-redis-monitoring-agent",
+      "file": "redis-monitoring-agent/Dockerfile",
+      "context": "redis-monitoring-agent"
+    },
+    {
+      "name": "qubership-redis-tests",
+      "file": "redis-tests/Dockerfile",
+      "context": "redis-tests"
+    },
+    {
+      "name": "qubership-redis-transfer",
+      "file": "docker-transfer/Dockerfile",
+      "context": "."
+    }
+  ],
+  "platforms": "linux/amd64,linux/arm64"
+}

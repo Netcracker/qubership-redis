@@ -1,0 +1,2 @@
+robotframework-requests
+redis==3.5.3

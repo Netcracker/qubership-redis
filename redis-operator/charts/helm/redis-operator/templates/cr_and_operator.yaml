@@ -1,0 +1,376 @@
+{{/* Sticky deploymentVersion: reuse from live CR; fallback to deterministic hash*/}}
+{{- $cr := lookup "qubership.org/v2" "DbaasRedisAdapter" .Release.Namespace .Values.name -}}
+{{- $deploymentVersion := "" -}}
+{{- if $cr -}}
+  {{- $deploymentVersion = dig "spec" "deploymentVersion" "" $cr -}}
+{{- end -}}
+{{- if not $deploymentVersion -}}
+  {{- $seed := printf "%s|%s|%s" .Values.name .Release.Namespace (coalesce .Values.DEPLOYMENT_RESOURCE_NAME .Values.SERVICE_NAME) -}}
+  {{- $deploymentVersion = (sha256sum $seed | trunc 10) -}}
+{{- end -}}
+apiVersion: qubership.org/v2
+kind: DbaasRedisAdapter
+metadata:
+  labels:
+    {{- include "redis.defaultLabels" . | nindent 4 }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/processed-by-operator: "redis-operator"
+  name: {{ .Values.name }}
+spec:
+  partOf: {{ .Values.PART_OF }}
+  artifactDescriptorVersion: {{ .Values.ARTIFACT_DESCRIPTOR_VERSION | trunc 63 | trimAll "-_." }}
+  managedBy: {{ .Values.MANAGED_BY }}
+  instance: {{ cat (coalesce .Values.DEPLOYMENT_RESOURCE_NAME .Values.SERVICE_NAME) "-" .Values.NAMESPACE | nospace | trunc 63 | trimSuffix "-" }}
+  deploymentVersion: {{ $deploymentVersion | quote }}
+
+  waitTimeout: {{ .Values.waitTimeout }}
+  serviceAccountName: {{ .Values.serviceAccountName }}
+
+  {{- if .Values.policies }}
+  policies:
+    {{- if .Values.policies.tolerations }}
+    tolerations:
+      {{- range $tKey, $t := .Values.policies.tolerations }}
+      - key: {{ $t.key }}
+        effect: {{ $t.effect }}
+        operator: {{ $t.operator }}
+        tolerationSeconds: {{ $t.tolerationSeconds }}
+        value: {{ $t.value }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+
+  securityContext:
+    fsGroup: {{ .Values.securityContext.fsGroup }}
+    runAsUser: {{ .Values.securityContext.runAsUser }}
+    {{- if .Values.securityContext.supplementalGroups }}
+    supplementalGroups:
+      {{- range $key, $value := .Values.securityContext.supplementalGroups }}
+      - {{ $value | quote }}
+      {{- end }}
+    {{- end }}
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  dbaas:
+    install: {{template "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.dbaas.install "envVar" .Values.DBAAS_ENABLED "default" true ) }}
+    adapter:
+      username: {{ .Values.dbaas.adapter.username | quote }}
+      secretName: {{ .Values.dbaas.adapter.secretName }}
+      apiVersion: {{ .Values.dbaas.adapter.apiVersion }}
+      createDBTimeout: {{ .Values.dbaas.adapter.createDBTimeout }}
+      supportedFeatures:
+        tls: {{ .Values.redis.tls.enabled }}
+
+    aggregator:
+      address: {{ .Values.dbaas.aggregator.address }}
+      username: {{ .Values.dbaas.aggregator.username | quote }}
+      {{- if .Values.vaultRegistration.enabled }}
+      vaultPasswordPath: {{ .Values.dbaas.aggregator.vaultPasswordPath | quote }}
+      {{- end }}
+      secretName: {{ .Values.dbaas.aggregator.secretName }}
+      physicalDatabaseIdentifier: {{ .Values.dbaas.aggregator.physicalDatabaseIdentifier }}
+      {{- if .Values.dbaas.aggregator.physicalDatabaseLabels }}
+      physicalDatabaseLabels:
+        {{- range $key, $value := .Values.dbaas.aggregator.physicalDatabaseLabels }}
+          {{ $key | quote }}: {{ $value | quote }}
+          {{- end }}
+      {{- end }}
+      dbaasAggregatorRegistrationAddress: {{template "fromEnv" (dict "envName" .Values.API_DBAAS_ADDRESS "default" .Values.dbaas.aggregator.dbaasAggregatorRegistrationAddress) }}
+    tls:
+      enabled: {{ .Values.redis.tls.enabled }}
+      privateKeyFileName: {{ .Values.redis.tls.privateKeyFileName }}
+      signedCRTFileName: {{ .Values.redis.tls.signedCRTFileName }}
+  imagePullPolicy: {{ .Values.imagePullPolicy }}
+  redis:
+    dockerImage: {{template "find_image" (dict "deployName" "dockerRedis" "SERVICE_NAME" "dockerRedis" "vals" .Values "default" .Values.redis.dockerImage) }}
+    {{- if .Values.redis.priorityClassName }}
+    priorityClassName: {{ .Values.redis.priorityClassName | quote }}
+    {{- end }}
+    {{- if .Values.vaultRegistration.enabled }}
+    args: ["export pass=$(/vault/vault-env printenv REDIS_PASSWORD | tail -1) && /usr/local/bin/redis-server /etc/redis/redis.conf --requirepass \"$pass\""]
+    {{- else }}
+    args: ["/etc/redis/redis.conf","--requirepass $(REDIS_PASSWORD)"]
+    {{- end }}
+    {{- if .Values.redis.tls.enabled }}
+    tls:
+      enabled: {{ .Values.redis.tls.enabled }}
+      tlsPort: {{ .Values.redis.tls.tlsPort }}
+      nonTlsPort: {{ .Values.redis.tls.nonTlsPort }}
+      certificateSecretName: {{ .Values.redis.tls.certificateSecretName }}
+      rootCAFileName: {{ .Values.redis.tls.rootCAFileName }}
+      privateKeyFileName: {{ .Values.redis.tls.privateKeyFileName }}
+      signedCRTFileName: {{ .Values.redis.tls.signedCRTFileName }}
+      clusterIssuerName: {{ .Values.redis.tls.generateCerts.clusterIssuerName }}
+    {{- end }}
+    secretName: {{ .Values.redis.secretName }}
+    {{- if .Values.redis.nodeLabels}}
+    nodeLabels:
+      {{- range $key, $value := .Values.redis.nodeLabels }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end }}
+    {{- end }}
+    {{ template "getResourcesForProfile" (dict "envVar" .Values.REDIS_PROFILE "dotVar" .Values.global.profile "values" .Values) }}
+    parameters:
+      label: {{ default "redis-dbaas-adapter" .Values.redis.parameters.label }}
+
+
+  monitoringAgent:
+    install: {{ include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.monitoringAgent.install "envVar" .Values.MONITORING_ENABLED "default" true ) }}
+    dockerImage: {{template "find_image" (dict "deployName" "dockerMonitoringAgent" "SERVICE_NAME" "redis-monitoring-agent" "vals" .Values "default" .Values.monitoringAgent.dockerImage) }}
+    {{- if .Values.monitoringAgent.priorityClassName }}
+    priorityClassName: {{ .Values.monitoringAgent.priorityClassName | quote }}
+    {{- end }}
+    {{- if .Values.monitoringAgent.nodeLabels}}
+    nodeLabels:
+      {{- range $key, $value := .Values.monitoringAgent.nodeLabels }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end }}
+    {{- end }}
+    metricCollector: {{ .Values.monitoringAgent.metricCollector }}
+    resources:
+      limits:
+        cpu: {{ .Values.monitoringAgent.resources.limits.cpu }}
+        memory: {{ .Values.monitoringAgent.resources.limits.memory }}
+      requests:
+        cpu: {{ .Values.monitoringAgent.resources.requests.cpu  }}
+        memory: {{ .Values.monitoringAgent.resources.requests.memory  }}
+    influxDB:
+      host: {{ .Values.monitoringAgent.influxDB.host | quote }}
+      database: {{ .Values.monitoringAgent.influxDB.database | quote }}
+      retentionPolicy: {{ .Values.monitoringAgent.influxDB.retentionPolicy }}
+      user: {{ .Values.monitoringAgent.influxDB.user | quote }}
+      {{- if .Values.vaultRegistration.enabled }}
+      vaultPasswordPath: {{ .Values.monitoringAgent.influxDB.vaultPasswordPath | quote }}
+      {{- end }}
+      secretName: {{ .Values.monitoringAgent.influxDB.secretName }}
+
+  {{ if .Values.vaultRegistration }}
+  vaultRegistration:
+    dockerImage: {{template "find_image" (dict "deployName" "dockerVaultRegistration" "SERVICE_NAME" "dockerVaultRegistration" "vals" .Values "default" .Values.vaultRegistration.dockerImage) }}
+    enabled: {{ .Values.vaultRegistration.enabled }}
+    {{- if .Values.vaultRegistration.enabled }}
+    path: {{template "ifEnvThenDefault" (dict "envName" .Values.CLOUD_PUBLIC_HOST "then" (printf "secret/nc-%s/%s/%s" .Values.CLOUD_PUBLIC_HOST .Release.Namespace .Values.serviceAccountName) "default" .Values.vaultRegistration.path ) }}
+    method: {{template "ifEnvThenDefault" (dict "envName" .Values.CLOUD_PUBLIC_HOST "then" (printf "nc-%s_%s" .Values.CLOUD_PUBLIC_HOST .Release.Namespace ) "default" .Values.vaultRegistration.method ) }}
+    url: {{template "fromEnv" (dict "envName" .Values.VAULT_ADDR "default" .Values.vaultRegistration.url) }}
+    role: {{ .Values.serviceAccountName }}
+    rotationPeriod: {{ .Values.vaultRegistration.rotationPeriod }}
+    initContainerResources:
+      requests:
+        cpu: {{ .Values.vaultRegistration.initContainerResources.requests.cpu }}
+        memory: {{ .Values.vaultRegistration.initContainerResources.requests.memory }}
+      limits:
+        cpu: {{ .Values.vaultRegistration.initContainerResources.limits.cpu }}
+        memory: {{ .Values.vaultRegistration.initContainerResources.limits.memory }}
+    {{- end }}
+
+  {{- end }}
+
+  robotTests:
+    install: {{ .Values.robotTests.install }}
+    dockerImage: {{template "find_image" (dict "deployName" "dockerRobotTests" "SERVICE_NAME" "dockerRobotTests" "vals" .Values "default" .Values.robotTests.dockerImage) }}
+    {{- if .Values.robotTests.priorityClassName }}
+    priorityClassName: {{ .Values.robotTests.priorityClassName | quote }}
+    {{- end }}
+    {{- if .Values.robotTests.tags}}
+    tags: {{ .Values.robotTests.tags }}
+    {{- end }}
+    {{- if .Values.robotTests.nodeLabels}}
+    nodeLabels:
+      {{- range $key, $value := .Values.robotTests.nodeLabels }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end }}
+    {{- end }}
+    resources:
+      limits:
+        cpu: {{ .Values.robotTests.resources.limits.cpu }}
+        memory: {{ .Values.robotTests.resources.limits.memory }}
+      requests:
+        cpu: {{ .Values.robotTests.resources.requests.cpu  }}
+        memory: {{ .Values.robotTests.resources.requests.memory  }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dbaas-redis-operator
+  labels:
+    name: dbaas-redis-operator
+    app.kubernetes.io/name: {{ .Values.SERVICE_NAME }}
+    app.kubernetes.io/instance: {{ cat (coalesce .Values.DEPLOYMENT_RESOURCE_NAME .Values.SERVICE_NAME) "-" .Values.NAMESPACE | nospace | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/version: {{ .Values.ARTIFACT_DESCRIPTOR_VERSION | trunc 63 | trimAll "-_." }}
+    app.kubernetes.io/component: 'backend'
+    app.kubernetes.io/part-of: {{ .Values.PART_OF }}
+    app.kubernetes.io/managed-by: {{ .Values.MANAGED_BY }}
+    app.kubernetes.io/technology: 'go'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: dbaas-redis-operator
+  template:
+    metadata:
+      labels:
+        name: dbaas-redis-operator
+        app.kubernetes.io/name: {{ .Values.SERVICE_NAME }}
+        app.kubernetes.io/instance: {{ cat (coalesce .Values.DEPLOYMENT_RESOURCE_NAME .Values.SERVICE_NAME) "-" .Values.NAMESPACE | nospace | trunc 63 | trimSuffix "-" }}
+        app.kubernetes.io/version: {{ .Values.ARTIFACT_DESCRIPTOR_VERSION | trunc 63 | trimAll "-_." }}
+        app.kubernetes.io/component: 'backend'
+        app.kubernetes.io/part-of: {{ .Values.PART_OF }}
+        app.kubernetes.io/managed-by: {{ .Values.MANAGED_BY }}
+        app.kubernetes.io/technology: 'go'
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      {{ if .Values.operator.priorityClassName }}
+      priorityClassName: {{ .Values.operator.priorityClassName }}
+      {{ end }}
+      {{- if .Values.vaultRegistration.enabled }}
+      initContainers:
+        - name: operator-init
+          image: {{ template "find_image" (dict "deployName" "operator_init" "SERVICE_NAME" "operator_init" "vals" .Values "default" .Values.operator.initImage) }}
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          {{ if .Values.operator.priorityClassName }}
+          priorityClassName: {{ .Values.operator.priorityClassName }}
+          {{ end }}
+          resources:
+            limits:
+              cpu: 50m
+              memory: 50Mi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: VAULT_REGISTRATION_PATH
+              value: {{template "ifEnvThenDefault" (dict "envName" .Values.CLOUD_PUBLIC_HOST "then" (printf "secret/nc-%s/%s/%s" .Values.CLOUD_PUBLIC_HOST .Release.Namespace .Values.serviceAccountName) "default" .Values.vaultRegistration.path ) }}
+            - name: KV_ENABLED
+              value: "False"
+            - name: NC_RUN_MIGRATION_FOR_DBAAS
+              value: "False"
+            - name: CLOUD_PUBLIC_HOST
+              value: {{ default .Values.vaultRegistration.serverHostname .Values.CLOUD_PUBLIC_HOST }}
+            - name: SERVICE_ACCOUNT
+              value: {{ .Values.serviceAccountName }}
+            - name: CREATE_VAULT_AUTH
+              value: "True"
+            - name: VAULT_ADDR
+              value: {{template "fromEnv" (dict "envName" .Values.VAULT_ADDR "default" .Values.vaultRegistration.url) }}
+            - name: PAAS_PLATFORM
+              value: {{ default "kubernetes" .Values.vaultRegistration.paasPlatform }}
+            - name: PAAS_VERSION
+              value: {{ default "1.14" .Values.vaultRegistration.paasVersion | quote }}
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-secret-services
+                  key: token
+            - name: OPENSHIFT_SERVER
+            {{- if and .Values.CLOUD_PROTOCOL .Values.CLOUD_API_HOST .Values.CLOUD_API_PORT }}
+              value: {{ printf "%s://%s:%.0f" .Values.CLOUD_PROTOCOL .Values.CLOUD_API_HOST .Values.CLOUD_API_PORT }}
+            {{- else }}
+              value: "https://kubernetes.default:443"
+            {{- end }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: operator
+          image: {{template "find_image" (dict "deployName" "redisOperatorImage" "SERVICE_NAME" "redis-operator-image" "vals" .Values "default" .Values.operator.dockerImage) }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: DEPLOYMENT_VERSION
+              value: {{ $deploymentVersion | quote }}
+          resources:
+            requests:
+              cpu: {{ default "125m" .Values.operator.resources.requests.cpu }}
+              memory: {{ default "250Mi" .Values.operator.resources.requests.memory }}
+            limits:
+              cpu: {{ default "250m" .Values.operator.resources.limits.cpu }}
+              memory: {{ default "256Mi" .Values.operator.resources.limits.memory }}
+          {{- if .Values.dbaas.install }}
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 20
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          ports:
+            - containerPort: 8080
+              name: web
+              protocol: TCP
+          {{- else }}
+          livenessProbe:
+            exec:
+              command: ["sh","-c","kill -0 1"]
+            initialDelaySeconds: 20
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          readinessProbe:
+            exec:
+              command: ["sh","-c","kill -0 1"]
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          {{- end }}
+          {{- if and .Values.redis.tls.enabled .Values.redis.tls.generateCerts.enabled }}
+          volumeMounts:
+            - name:      root-ca
+              mountPath: /usr/ssl/
+            - name:      {{ .Values.dbaas.tls.dbaasAdapterCASecretName }}
+              mountPath: /certs/
+          {{- end }}
+      {{- if and .Values.redis.tls.enabled .Values.redis.tls.generateCerts.enabled}}
+      volumes:
+      - name: root-ca
+        secret:
+          secretName: {{ .Values.redis.tls.certificateSecretName }}
+      - name: dbaas-adapter-certificate
+        secret:
+          secretName: {{ .Values.dbaas.tls.dbaasAdapterCASecretName }}
+      {{- end }}
+      {{- if .Values.policies }}
+      tolerations:
+        {{- range $tKey, $t := .Values.policies.tolerations }}
+        - key: {{ $t.key }}
+          operator: {{ $t.operator }}
+          value: {{ $t.value }}
+          effect: {{ $t.effect }}
+          tolerationSeconds: {{ $t.tolerationSeconds }}
+      {{- end }}
+  {{- end }}

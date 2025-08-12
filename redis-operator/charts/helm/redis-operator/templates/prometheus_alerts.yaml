@@ -1,0 +1,84 @@
+{{- if eq (include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.monitoringAgent.install "envVar" .Values.MONITORING_ENABLED "default" true )) "true" }}
+  {{- if eq .Values.monitoringAgent.metricCollector "prometheus" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: monitoring
+    prometheus: redis-prometheus-exporter
+    role: alert-rules
+    {{- include "redis.defaultLabels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+  name: prometheus-redis-rules
+spec:
+  groups:
+    - name: {{ .Release.Namespace }}-{{ .Release.Name}}
+      rules:
+        - alert: Redis CPU Usage
+          annotations:
+            summary: Some of Redis pods CPU load is higher than {{ .Values.monitoringAgent.prometheus.alerts.cpuThreshold }} percents
+            description: Redis CPU load is higher than {{ .Values.monitoringAgent.prometheus.alerts.cpuThreshold }} percents
+          expr: '(
+               label_replace(
+                 max(rate(container_cpu_usage_seconds_total{image!="",container!~"POD|",pod=~".*",namespace="{{ .Release.Namespace }}"}[1m]))
+                 by (pod, namespace), "needed_pod", "$1", "pod", "(.*)")
+             )
+                / on(needed_pod)
+             (
+                label_replace(kube_pod_container_resource_limits_cpu_cores{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*"}, "needed_pod", "$1", "exported_pod", "(.*)")
+             ) > 0.{{ .Values.monitoringAgent.prometheus.alerts.cpuThreshold }}'
+          labels:
+            severity: warning
+            namespace: {{ .Release.Namespace }}
+            service: {{ .Release.Name }}
+        - alert: Redis Memory Usage
+          annotations:
+            summary: Some of Redis pods memory usage is higher than {{ .Values.monitoringAgent.prometheus.alerts.memThreshold }} percents
+            description: Redis memory usage is higher than {{ .Values.monitoringAgent.prometheus.alerts.memThreshold }} percents
+          expr: '(
+               label_replace(
+                 sum(container_memory_working_set_bytes{pod=~".*",namespace="{{ .Release.Namespace }}",image!="",container!~"POD|"}) by (pod),
+                "needed_pod", "$1", "pod", "(.*)")
+             )
+                / on(needed_pod)
+             (
+                label_replace(avg(kube_pod_container_resource_limits_memory_bytes{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*"}) by (exported_pod), "needed_pod", "$1", "exported_pod", "(.*)")
+             ) > 0.{{ .Values.monitoringAgent.prometheus.alerts.memThreshold }}'
+          labels:
+            severity: warning
+            namespace: {{ .Release.Namespace }}
+            service: {{ .Release.Name }}
+        - alert: Redis node is down
+          annotations:
+            description: Redis node is down
+          expr: 'redis_avg_latency{namespace="{{ .Release.Namespace }}"} == -1'
+          labels:
+            severity: high
+            namespace: {{ .Release.Namespace }}
+            service: {{ .Release.Name }}
+        - alert: Latency on a Redis node is more than {{ .Values.monitoringAgent.prometheus.alerts.latencyThresholdMs }} ms
+          annotations:
+            description: Latency on a Redis node is more than {{ .Values.monitoringAgent.prometheus.alerts.latencyThresholdMs }} ms
+          expr: 'redis_avg_latency{namespace="{{ .Release.Namespace }}"} > {{ .Values.monitoringAgent.prometheus.alerts.latencyThresholdMs }}'
+          labels:
+            severity: warning
+            namespace: {{ .Release.Namespace }}
+            service: {{ .Release.Name }}
+        - alert: Connections count to a Redis node is more than {{ .Values.monitoringAgent.prometheus.alerts.connectionsThreshold }}% of the limit
+          annotations:
+            description: Connections count to a Redis node is more than {{ .Values.monitoringAgent.prometheus.alerts.connectionsThreshold }}% of the limit
+          expr: '(
+               redis_clients{namespace="{{ .Release.Namespace }}"}
+             )
+                / on(server)
+             (
+                redis_maxclients{namespace="{{ .Release.Namespace }}"}
+             ) > 0.{{ .Values.monitoringAgent.prometheus.alerts.connectionsThreshold }}'
+          labels:
+            severity: warning
+            namespace: {{ .Release.Namespace }}
+            service: {{ .Release.Name }}
+  {{ end }}
+{{ end }}

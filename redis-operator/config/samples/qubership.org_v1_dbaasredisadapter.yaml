@@ -1,0 +1,12 @@
+apiVersion: qubership.org/v1
+kind: DbaasRedisAdapter
+metadata:
+  labels:
+    app.kubernetes.io/name: dbaasredisadapter
+    app.kubernetes.io/instance: dbaasredisadapter-sample
+    app.kubernetes.io/part-of: redis-oper
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: redis-oper
+  name: dbaasredisadapter-sample
+spec:
+  # TODO(user): Add fields here

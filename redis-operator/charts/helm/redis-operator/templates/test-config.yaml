@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tests-config
+  labels:
+    app: redis-tests
+data:
+  {{- if include "redis.monitoredImages" . }}
+  dd_images: {{ include "redis.monitoredImages" . }}
+  {{ else }}
+  dd_images: ""
+  {{ end }}
