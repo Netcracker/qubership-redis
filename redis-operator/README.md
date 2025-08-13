@@ -43,7 +43,6 @@ The changes might be marked as fully done if it accepts the following criteria:
 2. The solution is deployed to dev environment, where it can be tested.
 3. Created merge request has:
     1. "Green" pipeline (linter, build, deploy & test jobs are passed).
-    2. The title should follow the naming conversation: `<TMS-TICKET-ID>: <CHANGES-SHORT-DESCRIPTION>`.
     3. The description is **fully** filled.
 
 ### Deploy to k8s
@@ -53,12 +52,12 @@ The changes might be marked as fully done if it accepts the following criteria:
 1. Build operator and integration tests, if you need non-master versions.
 2. Prepare kubeconfig on you host machine to work with target cluster.
 3. Prepare `sample.yaml` file with deployment parameters, which should contains custom docker images if it is needed.
-4. Store `sample.yaml` file in `/charts/helm/redis-operator` directory.
+4. Store `sample.yaml` file in `redis-operator/charts/helm/redis-operator` directory.
 5. Go to `/charts/helm/redis-operator` directory.
 6. Run the following command if you deploy Redis:
 
      ```sh
-     # Run in /charts/helm/redis-operator directory
+     # Run in redis-operator/charts/helm/redis-operator directory
      helm install redis-operator ./ -f sample.yaml -n <TARGET_NAMESPACE>
      ```
 
