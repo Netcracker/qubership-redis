@@ -2,7 +2,7 @@
 A set of components to run **Redis** in Kubernetes:
 
 - **redis-operator** — CRD & controller that provisions Redis instances via the `DbaasRedisAdapter` custom resource.
-- **redis-monitoring-agent** — Telegraf-based side service that auto-generates `telegraf.conf` and exposes Prometheus metrics (`:9273`).
+- **redis-monitoring-agent** — Telegraf-based side service that auto-generates `telegraf.conf` and exposes Prometheus metrics.
 - **redis-tests** — RobotFramework tests for quick CRUD / availability checks.
 
 ## Repository layout

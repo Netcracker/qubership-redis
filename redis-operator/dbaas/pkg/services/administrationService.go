@@ -366,9 +366,17 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 	if redisEnvCredErr != nil {
 		return "", nil, redisEnvCredErr
 	}
+
+	secretCopy := secret.DeepCopy()
+	secretCopy.ObjectMeta.ResourceVersion = ""
+	secretCopy.ObjectMeta.UID = ""
+	secretCopy.ObjectMeta.CreationTimestamp = metav1.Time{}
+	secretCopy.ObjectMeta.ManagedFields = nil
+
 	envVarForRedisInstance := coreUtils.GetSecretEnvVar(redisPasswordConst, credsSecretName, constants.Password)
 
-	objectsToCreate = append(objectsToCreate, objectToCreate{secret, secret.ObjectMeta})
+	objectsToCreate = append(objectsToCreate,
+    	objectToCreate{secretCopy, secretCopy.ObjectMeta})
 
 	// Making ConfigMap
 	redisConfig := GetRedisDefaultConfigMap(adminService.kubeClient, adminService.namespace, logger)
