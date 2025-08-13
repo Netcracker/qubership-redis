@@ -24,7 +24,7 @@ securityContext:
   runAsUser: 1001
   supplementalGroups:
 
-imagePullPolicy: IfNotPresent
+imagePullPolicy: Always
 
 operator:
   dockerImage: ghcr.io/netcracker/qubership-redis-operator:feature_initial
