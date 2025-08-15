@@ -2,8 +2,6 @@ module github.com/Netcracker/qubership-redis/redis-operator
 
 go 1.24.6
 
-toolchain go1.23.10
-
 require (
 	github.com/Netcracker/qubership-dbaas-adapter-core v0.9.6
 	github.com/Netcracker/qubership-nosqldb-operator-core v1.0.7
