@@ -1,4 +1,4 @@
-FROM golang:1.23.10-alpine AS builder
+FROM golang:1.24.6-alpine AS builder
 ARG GOPROXY=https://proxy.golang.org,direct
 ENV CGO_ENABLED=0
 WORKDIR /src
@@ -17,7 +17,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
       -ldflags "-s -w" \
       ./main.go
 
-FROM alpine:3.21.3
+FROM alpine:3.22.0
 
 ENV WORKDIR=/opt/operator/ \
     OPERATOR=/usr/local/bin/dbaas-redis-operator \

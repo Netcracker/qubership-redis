@@ -13,10 +13,10 @@ RUN mkdir -p bin \
   && go build \
        -o ./bin/monitoring-watcher \
        -gcflags "all=-trimpath=${GOPATH}" \
-       -asmflags "all=-trimpath=${GOPATH}" 
+       -asmflags "all=-trimpath=${GOPATH}"
 
 FROM redis:7.4.2-alpine AS redis
-FROM telegraf:1.34.0-alpine
+FROM telegraf:1.35.3-alpine
 
 USER root
 COPY health.sh /health.sh
