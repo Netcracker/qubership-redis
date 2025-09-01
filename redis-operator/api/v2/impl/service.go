@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
@@ -20,6 +21,8 @@ import (
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -98,6 +101,23 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 					spec.Spec.Redis.PriorityClassName,
 					spec.Spec.PartOf, spec.Spec.ManagedBy,
 				)
+
+				if dc.Spec.Selector != nil && !apiequality.Semantic.DeepEqual(dc.Spec.Selector, redisDC.Spec.Selector) {
+					log.Warn("Selector drift detected; preserving existing Deployment selector",
+						zap.String("name", redisName),
+						zap.Any("existingSelector", dc.Spec.Selector),
+						zap.Any("desiredSelector", redisDC.Spec.Selector),
+					)
+					// Keep the old (live) selector
+					redisDC.Spec.Selector = dc.Spec.Selector.DeepCopy()
+					// Ensure pod template labels include every selector label (selector ⊆ template.labels)
+					if redisDC.Spec.Template.Labels == nil {
+						redisDC.Spec.Template.Labels = map[string]string{}
+					}
+					for k, v := range dc.Spec.Selector.MatchLabels {
+						redisDC.Spec.Template.Labels[k] = v
+					}
+				}
 				// Make sure db is using vault - check init container
 				if vaultHelper != nil && len(dc.Spec.Template.Spec.InitContainers) > 0 {
 
@@ -128,6 +148,26 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 					updateErr = core.CreateOrUpdateRuntimeObject(kubeClient, runtimeScheme, nil, redisDC, redisDC.ObjectMeta, true)
 					if updateErr == nil {
 						break
+					}
+					if apierrors.IsInvalid(updateErr) || strings.Contains(updateErr.Error(), "field is immutable") {
+						log.Warn("Immutable field error during update; retrying with preserved selector", zap.String("name", redisName), zap.Error(updateErr))
+						current := &v1.Deployment{}
+						if err := kubeClient.Get(context.TODO(), client.ObjectKey{Name: redisName, Namespace: request.Namespace}, current); err == nil && current.Spec.Selector != nil {
+							redisDC.Spec.Selector = current.Spec.Selector.DeepCopy()
+							if redisDC.Spec.Template.Labels == nil {
+								redisDC.Spec.Template.Labels = map[string]string{}
+							}
+							for k, v := range current.Spec.Selector.MatchLabels {
+								redisDC.Spec.Template.Labels[k] = v
+							}
+							if err2 := core.CreateOrUpdateRuntimeObject(kubeClient, runtimeScheme, nil, redisDC, redisDC.ObjectMeta, true); err2 == nil {
+								log.Info("Recovered from immutable selector error by preserving existing selector", zap.String("name", redisName))
+								updateErr = nil
+								break
+							} else {
+								updateErr = err2
+							}
+						}
 					}
 				}
 				core.PanicError(updateErr, log.Error, "Failed to update existing DB")
