@@ -4,6 +4,7 @@
 #
 
 DEPLOY_W_HELM: true
+ESCAPE_SEQUENCE: "true"
 name: dbaas-redis-service
 global:
   profile: ""
@@ -55,7 +56,7 @@ dbaas:
     address: "http://dbaas-aggregator.dbaas:8080"
     physicalDatabaseIdentifier: "redis"
     physicalDatabaseLabels:
-    dbaasAggregatorRegistrationAddress: "http://dbaas-aggregator.dbaas:8080"
+    dbaasAggregatorRegistrationAddress: "http://dbaas-aggregator.dbaas-core:8080"
   tls:
     dbaasAdapterCASecretName: dbaas-adapter-certificate
     duration: 365
@@ -148,7 +149,7 @@ redis:
     maxclients: "50000"
 
 monitoringAgent:
-  install: true
+  install: false
   dockerImage: ghcr.io/netcracker/qubership-redis-monitoring-agent:main
   priorityClassName: ""
   nodeLabels:
@@ -193,8 +194,8 @@ vaultRegistration:
       memory: 64Mi
 
 disasterRecovery:
-  enabled: false
-  replicatorNamespace: replicator-dc1
+  enabled: true
+  replicatorNamespace: replicator-dc2
 
 robotTests:
   install: false
