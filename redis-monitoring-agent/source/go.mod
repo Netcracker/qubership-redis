@@ -1,6 +1,6 @@
 module github.com/Netcracker/qubership-redis/redis-monitoring-agent
 
-go 1.23.0
+go 1.25.0
 
 require (
 	github.com/Netcracker/qubership-nosqldb-operator-core v1.0.7
@@ -22,7 +22,7 @@ require (
 	github.com/evanphx/json-patch v5.9.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
