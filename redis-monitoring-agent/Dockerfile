@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25.0-alpine AS builder
 
 ARG GOPATH="/home/netcrk/go"
 ENV GOPATH=${GOPATH}
@@ -16,7 +16,7 @@ RUN mkdir -p bin \
        -asmflags "all=-trimpath=${GOPATH}"
 
 FROM redis:7.4.2-alpine AS redis
-FROM telegraf:1.35.3-alpine
+FROM telegraf:1.35.4-alpine
 
 USER root
 COPY health.sh /health.sh
