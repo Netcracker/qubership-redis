@@ -5,8 +5,8 @@ github.com/Netcracker/qubership-credential-manager v0.0.3 h1:08QiT/wFo184ac39oab
 github.com/Netcracker/qubership-credential-manager v0.0.3/go.mod h1:BAZvlOSDmZ25z8YFLXyI57OCZ63MdQPtGq0/vmiTjuQ=
 github.com/Netcracker/qubership-dbaas-adapter-core v0.9.6 h1:q4e8ssalfyu/+kp5RvLfLU7UsxTWgxSi7STs7rQxWys=
 github.com/Netcracker/qubership-dbaas-adapter-core v0.9.6/go.mod h1:dEXm/aZmbDHVkkMqmcU901I1akukhL+3y4bPoTWBWFQ=
-github.com/Netcracker/qubership-nosqldb-operator-core v1.0.7 h1:LpRVSfaj3uOGhzSvdOYxk/apBc3qWy0XMHqRJDQDki0=
-github.com/Netcracker/qubership-nosqldb-operator-core v1.0.7/go.mod h1:TXQTs0LbMMjcan++/ArHKOXlA4z72pQ7u+vrf6H2+34=
+github.com/Netcracker/qubership-nosqldb-operator-core v1.0.8 h1:Uk+aosnQIQKqbYQXi2MbzPXOCMB5xf2QN3mddYbtXQA=
+github.com/Netcracker/qubership-nosqldb-operator-core v1.0.8/go.mod h1:TXQTs0LbMMjcan++/ArHKOXlA4z72pQ7u+vrf6H2+34=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
