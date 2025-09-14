@@ -15,7 +15,7 @@ For information about the hardware prerequisites, refer to [HWE](#hwe).
 The prerequisites to deploy DBaaS Redis Operator are as follows:
 
 * The deployer user (SA) must have the following role bound:
-  
+
   ```
   apiVersion: rbac.authorization.k8s.io/v1
   kind: Role
@@ -109,43 +109,6 @@ Specify `--skip-crds` in the `ADDITIONAL_OPTIONS` parameter of the DP Deployer J
 
 Specify `DISABLE_CRD=true;` in the `CUSTOM_PARAMS` parameter of the App Deployer Job.
 
-###  Store Credentials in Vault
-
-There are several manual steps required for the Vault logic to work correctly in the DBaaS Redis Operator.
-Before you start, ensure that the Vault is working correctly.
-For more information, refer to the _Official Vault Documentation_ at [https://www.vaultproject.io/docs](https://www.vaultproject.io/docs).
-
-To store the credentials:
-
-1. Create a new v1 key/value storage in the Vault terminal.
-
-   `vault login <VAULT_TOKEN>`
-
-   `vault secrets enable -path="secret" -version=1 kv`
-
-1. Create the Cluster Role Binding.
-
-```
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
-    cloudops.qubership.org/tag: KEYMANAGER
-  name: <REDIS_K8S_NAMESPACE>-key-manager-auth-delegator
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:auth-delegator
-subjects:
-  - kind: ServiceAccount
-    name: vault-integration
-    namespace: <REDIS_K8S_NAMESPACE>
-```
-
-Where,
-   `<REDIS_K8S_NAMESPACE>` is the namespace where Redis Service is deployed through DBaaS Redis Operator.
-
-**Note**: If the DBaaS aggregator credentials are stored in the Vault, the path to their passwords should be set in the `dbaas.aggregator.vaultPasswordPath` parameter.
 
 ## HWE
 
@@ -157,7 +120,7 @@ Redis services resources can be selected during deployment using parameter `glob
 
 ### Small
 
-Recommended for development purposes, PoC, and demos.   
+Recommended for development purposes, PoC, and demos.
 
 
 | Module                 | CPU Requests, cores | RAM Requests, Mb | CPU Limits, cores | RAM Limits, Mb |
@@ -200,7 +163,7 @@ The following sections provide the list of parameters.
 
 There are no mandatory parameters. By default, Redis with DBaaS adapter is installed.
 
-### Operator Parameters 
+### Operator Parameters
 
 The operator parameters are specified below.
 
@@ -232,7 +195,6 @@ The list of DBaaS Redis Adapter parameters is as follows:
 | `dbaas.aggregator.address`                            | false     | string | http://dbaas-aggregator.dbaas:8080 | The address of the aggregator where the adapter registers its physical database cluster. |
 | `dbaas.aggregator.username`                           | false     | string | cluster-dba                        | The username for DBaaS adapter registration in DBaaS.                                    |
 | `dbaas.aggregator.password`                           | false     | string | Bnmq5567_PO                        | The password for DBaaS adapter registration in DBaaS.                                    |
-| `dbaas.aggregator.vaultPasswordPath`                  | false     | string | ""                                 | The password path in the Vault for the DBaaS Aggregator user.                            |
 | `dbaas.aggregator.secretName`                         | false     | string | dbaas-aggregator-credentials       | The name of the secret that holds Aggregator credentials.                                |
 | `dbaas.adapter.username`                              | false     | string | dbaas-aggregator                   | The username for the database adapter.                                                   |
 | `dbaas.adapter.password`                              | false     | string | dbaas-aggregator                   | The password for the database adapter.                                                   |
@@ -292,18 +254,6 @@ The list of Monitoring Agent parameters is specified below.
 | `monitoringAgent.prometheus.alerts.latencyThresholdMs`   | false     | int    | 20      | The threshold latency in ms at which an alert will be raised.                                                          |
 | `monitoringAgent.prometheus.alerts.connectionsThreshold` | false     | int    | 90      | The threshold for the ratio of the current connections to redis_maxclients in percentage at which an alert will be raised. |
 
-### Vault Registration Parameters
-
-The list of Vault Registration parameters is specified below.
-
-| Parameter                       | Mandatory | Type   | Default    | Description                                                                                               |
-| ------------------------------- | --------- | ------ | ---------- | --------------------------------------------------------------------------------------------------------- |
-| `vaultRegistration.enabled`     | false     | bool   | false      | If the Vault storing the credentials are enabled or not.                                                   |
-| `vaultRegistration.dockerImage` | false     | string | ""         | The docker image to be used.                                                                              |
-| `vaultRegistration.path`        | false     | string | kv/redis   | The Vault path to the key-value storage.                                                                  |
-| `vaultRegistration.url`         | false     | string | ""         | The URL address to the Vault service.                                                                     |
-| `vaultRegistration.role`        | false     | string | redis-role | The name of the role that is already configured in the Vault (internal storage permissions).              |
-| `vaultRegistration.method`      | false     | string | kubernetes | The name of the authentication method that is already configured in the Vault for the Kubernetes cluster. |
 
 ### Robot Tests Parameters
 
@@ -419,7 +369,7 @@ Also, you have to specify the proper microservice images in the **values.yaml** 
 Also, in the **values.yaml** file in the **dockerImage** parameters you need to change the links to docker images from the current release that needs to be deployed.
 
 1. Clone the project to a local machine using the following command:
- 
+
    ```git clone git@github.com/Netcracker/qubership-redis/redis-operator.git```
 
 1. Navigate to the Redis operator directory using the following command:
@@ -438,12 +388,12 @@ By default the schema with DBaas integration is deployed.
 
 No required parameters for DBaaS Adapter Scheme.
 
-This schema will deploy only `dbaas-redis-operator`, `redis-monitoring-agent` and `robot-tests` deployments.    
+This schema will deploy only `dbaas-redis-operator`, `redis-monitoring-agent` and `robot-tests` deployments.
 There won't be any `Redis` deployment. All `Redis` instances are to be created on demand via `DBaas aggreator`.
 
 ### Single Redis Scheme
 
-This schema will deploy `dbaas-redis-operator`, `redis-monitoring-agent` and single `redis` deployments.  
+This schema will deploy `dbaas-redis-operator`, `redis-monitoring-agent` and single `redis` deployments.
 
 It will not allow to create `Redis` instances on demand.
 
@@ -460,7 +410,7 @@ SSL/TLS is supported by Redis starting with version 6 (2.6.0 redis-operator vers
 
 To enable TLS, set the `redis.tls.enabled` parameter to "true".
 
-TLS port can be set in the `redis.tls.tlsPort` parameter. By default, it is set to "6379". 
+TLS port can be set in the `redis.tls.tlsPort` parameter. By default, it is set to "6379".
 
 To enable automatic certificate generation with Cert Manager, set the `redis.tls.generateCerts.enabled` parameter to "true" and specify `ClusterIssuer` name in `redis.tls.generateCerts.clusterIssuerName`.
 Note that dbaas-redis-operator requires the following role during the deployment:
@@ -497,12 +447,12 @@ To pass pre-generated certificates as deploy parameters use the following parame
 `tls.dbaas.certificates.tls_key` - a base 64 encoded key for Dbaas Adapter
 
 
-Example: 
+Example:
 
 ```
 dbaas:
   install: false
-redis:      
+redis:
   tls:
     install: true
     generateCerts:
@@ -510,10 +460,10 @@ redis:
     certificates:
       tls_key: "LS0tLS1CRUd...LS0tLQo="
       tls_crt: "LS0tLS1...tLS0tLQo="
-      ca_crt: "LS0tLS1CRUdJ...FLS0tLS0K" 
+      ca_crt: "LS0tLS1CRUdJ...FLS0tLS0K"
 ```
 
-# Upgrade 
+# Upgrade
 
 This section provides the information about the upgrade procedure from one operator version to another.
 The upgrade procedure is identical to a clean installation. The only difference is that DEPLOY_MODE needs to be set to Rolling Update. If needed, change the deployment parameters.

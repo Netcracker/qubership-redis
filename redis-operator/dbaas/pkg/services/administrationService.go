@@ -18,9 +18,7 @@ import (
 	coreService "github.com/Netcracker/qubership-dbaas-adapter-core/pkg/service"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
-	mTypes "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/types"
 	coreUtils "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
-	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/vault"
 	v2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/common"
 	customEntity "github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/entity"
@@ -56,13 +54,11 @@ type AdministrationService struct {
 	redisLabel                        string
 	defaultRedisPassword              string
 	defaultRedisDbStartWait           int
-	vaulterHelper                     vault.VaultHelper
 	nodeSelector                      map[string]string
 	securityContext                   v1.PodSecurityContext
 	serviceAccountName                string
 	tolerations                       []v1.Toleration
 	redisImagePullPolicy              v1.PullPolicy
-	vaultRegistration                 mTypes.VaultRegistration
 	tls                               v2.TLS
 	priorityClassName                 string
 	artDescVersion, partOf, managedBy string
@@ -78,7 +74,6 @@ var (
 	passCharSet        = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +
 		"0123456789"
-	vaultPolicy                      = fmt.Sprintf("length = 16\nrule \"charset\" {\n  charset = \"%s\"\n}\n", passCharSet)
 	RedisDefaultConfigMapName string = "redis-default-conf"
 	// 55 characters because the max name length is 63 chars in k8s, but we use db name + various suffixes for creating other k8s units
 	dbNameLenghtLimit = 55
@@ -99,8 +94,6 @@ func NewAdministrationService(
 	redisLabel string,
 	defaultRedisPassword string,
 	defaultRedisDbStartWait int,
-	vaulterHelper vault.VaultHelper,
-	vaultRegistration mTypes.VaultRegistration,
 	nodeSelector map[string]string,
 	securityContext v1.PodSecurityContext,
 	serviceAccountName string,
@@ -124,8 +117,6 @@ func NewAdministrationService(
 		redisLabel:              redisLabel,
 		defaultRedisPassword:    defaultRedisPassword,
 		defaultRedisDbStartWait: defaultRedisDbStartWait,
-		vaulterHelper:           vaulterHelper,
-		vaultRegistration:       vaultRegistration,
 		nodeSelector:            nodeSelector,
 		securityContext:         securityContext,
 		serviceAccountName:      serviceAccountName,
@@ -370,7 +361,7 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 	envVarForRedisInstance := coreUtils.GetSecretEnvVar(redisPasswordConst, credsSecretName, constants.Password)
 
 	objectsToCreate = append(objectsToCreate,
-    	objectToCreate{secret, secret.ObjectMeta})
+		objectToCreate{secret, secret.ObjectMeta})
 
 	// Making ConfigMap
 	redisConfig := GetRedisDefaultConfigMap(adminService.kubeClient, adminService.namespace, logger)
@@ -410,12 +401,6 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 	)
 
 	objectsToCreate = append(objectsToCreate, objectToCreate{redisDeployment, redisDeployment.ObjectMeta})
-
-	if adminService.vaulterHelper != nil {
-		coreUtils.VaultPodSpec(&redisDeployment.Spec.Template.Spec, nil, adminService.vaultRegistration)
-		redisDeployment.Spec.Template.Spec.Containers[0].Command = []string{"/bin/sh"}
-		redisDeployment.Spec.Template.Spec.Containers[0].Args = []string{"-c", strings.Join(redisDeployment.Spec.Template.Spec.Containers[0].Args, " ")}
-	}
 
 	var createAndCheckErr error
 
@@ -585,18 +570,6 @@ func (adminService *AdministrationService) readRedisDBPassword(ctx context.Conte
 	}
 	password = string(secretObj.Data[constants.Password])
 
-	if adminService.vaulterHelper != nil && adminService.vaulterHelper.IsVaultURL(password) {
-		isExist, secret, vaultErr := adminService.vaulterHelper.CheckSecretExists(passSecretName)
-		if vaultErr != nil {
-			core.PanicError(secretErr, logger.Error, fmt.Sprintf("Failed checking secret %s in vault", passSecretName))
-		}
-		if isExist {
-			password = secret[constants.Password].(string)
-		} else {
-			core.PanicError(secretErr, logger.Error, fmt.Sprintf("Not found secret %s in vault for service %s", passSecretName, serviceName))
-		}
-	}
-
 	if password == "" {
 		core.PanicError(secretErr, logger.Error, fmt.Sprintf("The password for connect and update metadata was not found for %s", serviceName))
 	}
@@ -629,36 +602,15 @@ func generatePassword(length int) string {
 
 func (adminService *AdministrationService) storeCredentialsAndGetEnvForRedisInstance(secretName string, passwordFromRequest string) (*v1.Secret, string, error) {
 	var password string
-	isVault := adminService.vaulterHelper != nil
 
-	// If pass is not predefined, then generate it for vault or simple secret
 	if passwordFromRequest != "" {
 		password = passwordFromRequest
 	} else {
-		if isVault {
-			generatedPass, err := adminService.vaulterHelper.GeneratePassword(vaultPolicy)
-			if err != nil {
-				return nil, "", err
-			}
-			password = generatedPass
-		} else {
-			password = generatePassword(16)
-		}
+		password = generatePassword(16)
 	}
 
 	// Password to return
 	returnPass := password
-
-	// Store predefined or generated pass if vault is used
-	if isVault {
-		err := adminService.vaulterHelper.StorePassword(secretName, password)
-		if err != nil {
-			return nil, "", err
-		}
-
-		// Replace password with vault url
-		password = adminService.vaulterHelper.GetEnvTemplateForVault(redisPasswordConst, secretName).Value
-	}
 
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

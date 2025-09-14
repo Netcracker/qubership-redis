@@ -3,17 +3,14 @@ package adapter
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dbaas"
 	fiber2 "github.com/Netcracker/qubership-dbaas-adapter-core/pkg/impl/fiber"
 	coreService "github.com/Netcracker/qubership-dbaas-adapter-core/pkg/service"
-	coreUtils "github.com/Netcracker/qubership-dbaas-adapter-core/pkg/utils"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
 	nosqlFiber "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/fiber"
-	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/vault"
 	v2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl/utils"
 	mCore "github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/core"
@@ -27,7 +24,7 @@ import (
 )
 
 func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInterface, kubeClient client.Client, runtimeScheme *runtime.Scheme,
-	log *zap.Logger, vaultHelper vault.VaultHelper, namespace string, forceShutdown bool) error {
+	log *zap.Logger, namespace string, forceShutdown bool) error {
 
 	tlsEnabled := utils.IsTLSEnableForDBAAS(spec.Spec.Dbaas.Aggregator.DbaasAggregatorRegistrationAddress, spec.Spec.Redis.TLS.TLS.Enabled)
 	coreInstance := *nosqlFiber.GetFiberService()
@@ -45,33 +42,12 @@ func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInt
 	core.PanicError(secretAgErr, log.Error, fmt.Sprintf("Failed reading dbaas aggregator secret %s", spec.Spec.Dbaas.Aggregator.SecretName))
 	regPass := string(aggregatorCredentialsSecret.Data[constants.Password])
 
-	var vaultClient *coreUtils.VaultClient
-	if spec.Spec.VaultRegistration.Enabled {
-		if strings.HasPrefix(apiPass, "vault:") {
-			isApiExist, secretApi, vaultApiErr := vaultHelper.CheckSecretExists(spec.Spec.Dbaas.Adapter.SecretName)
-			core.PanicError(vaultApiErr, log.Error, fmt.Sprintf("Failed checking secret %s in vault", spec.Spec.Dbaas.Adapter.SecretName))
-			if isApiExist {
-				apiPass = secretApi[constants.Password].(string)
-			}
-		}
-		if strings.HasPrefix(regPass, "vault:") {
-			isApiExist, secretApi, vaultApiErr := vaultHelper.CheckSecretExists(spec.Spec.Dbaas.Aggregator.SecretName)
-			core.PanicError(vaultApiErr, log.Error, fmt.Sprintf("Failed checking secret %s in vault", spec.Spec.Dbaas.Aggregator.SecretName))
-			if isApiExist {
-				regPass = secretApi[constants.Password].(string)
-			}
-		}
-	} else {
-		vaultHelper = nil
-	}
-
 	supports := dao.SupportsBase{
 		Users:             false,
 		Settings:          false,
 		DescribeDatabases: true,
 		AdditionalKeys: dao.Supports{
 			"backupRestore": false,
-			"vault":         spec.Spec.VaultRegistration.Enabled,
 		},
 	}
 
@@ -92,7 +68,7 @@ func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInt
 		apiVersion = "v1"
 	}
 
-	adminService := PrepareAdminService(spec, redisClient, kubeClient, runtimeScheme, log, vaultHelper, namespace, apiVersion)
+	adminService := PrepareAdminService(spec, redisClient, kubeClient, runtimeScheme, log, namespace, apiVersion)
 
 	port := utils.GetHTTPPort(spec.Spec.Redis.TLS.TLS.Enabled)
 	admService := coreService.NewCoreAdministrationService(
@@ -101,7 +77,7 @@ func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInt
 		adminService,
 		log,
 		false, //we don't need static roles in vault
-		vaultClient,
+		nil,
 		"",
 	)
 
@@ -149,7 +125,7 @@ func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInt
 }
 
 func PrepareAdminService(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInterface, kubeClient client.Client, runtimeScheme *runtime.Scheme,
-	log *zap.Logger, vaultHelper vault.VaultHelper, namespace string, apiVersion string) *service.AdministrationService {
+	log *zap.Logger, namespace string, apiVersion string) *service.AdministrationService {
 	redisSpec := spec.Spec.Redis
 	redisPort := 6379
 
@@ -173,8 +149,6 @@ func PrepareAdminService(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClie
 		redisSpec.Label,
 		"redis",
 		spec.Spec.Adapter.CreateDBTimeout,
-		vaultHelper,
-		spec.Spec.VaultRegistration,
 		redisSpec.NodeLabels,
 		*spec.Spec.PodSecurityContext,
 		spec.Spec.ServiceAccountName,

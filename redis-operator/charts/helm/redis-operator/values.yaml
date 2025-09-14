@@ -50,7 +50,6 @@ dbaas:
   aggregator:
     username: cluster-dba
     password: Bnmq5567_PO
-    vaultPasswordPath:
     secretName: dbaas-aggregator-credentials
     address: "http://dbaas-aggregator.dbaas:8080"
     physicalDatabaseIdentifier: "redis"
@@ -168,7 +167,6 @@ monitoringAgent:
     retentionPolicy: default
     user: admin
     password: admin
-    vaultPasswordPath:
     secretName: redis-monitoring-agent-client-secret
   prometheus:
     alerts:
@@ -176,21 +174,6 @@ monitoringAgent:
       memThreshold: 95
       latencyThresholdMs: 20
       connectionsThreshold: 90
-
-vaultRegistration:
-  dockerImage: "banzaicloud/vault-env:1.19.0"
-  enabled: false
-  path: kv/redis
-  url:
-  role: redis-role
-  method: kubernetes
-  initContainerResources:
-    requests:
-      cpu: 10m
-      memory: 32Mi
-    limits:
-      cpu: 20m
-      memory: 64Mi
 
 disasterRecovery:
   enabled: false
