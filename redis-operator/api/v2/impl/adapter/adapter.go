@@ -3,11 +3,8 @@ package adapter
 import (
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
-	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/steps"
-	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/vault"
 	netcrackerv1 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl/utils"
-	"github.com/Netcracker/qubership-redis/redis-operator/common"
 	rc "github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/redis"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -37,22 +34,12 @@ func (r *AdapterBuilder) Build(ctx core.ExecutionContext) core.Executable {
 	kubeClient := ctx.Get(constants.ContextClient).(client.Client)
 	logger := ctx.Get(constants.ContextLogger).(*zap.Logger)
 	request := ctx.Get(constants.ContextRequest).(reconcile.Request)
-	vaultHelper := ctx.Get(constants.ContextVault).(vault.VaultHelper)
 	runtimeScheme := ctx.Get(constants.ContextSchema).(*runtime.Scheme)
 	redisClient := ctx.Get(utils.ContextRedis).(rc.RedisClientInterface)
 	compound := AdapterCompound{}
 	compound.ServiceName = ServiceName
 	compound.CalcDeployType = func(ctx core.ExecutionContext) (deployType core.MicroServiceDeployType, err error) {
 		return core.CleanDeploy, nil
-	}
-
-	if spec.Spec.VaultRegistration.Enabled {
-		compound.AddStep(&steps.MoveSecretToVault{
-			SecretName:        spec.Spec.Dbaas.Adapter.SecretName,
-			PolicyName:        ServiceName,
-			Policy:            common.VaultPolicy,
-			VaultRegistration: &spec.Spec.VaultRegistration,
-		})
 	}
 
 	compound.AddStep(&utils.SimpleCtxExecutable{
@@ -75,7 +62,7 @@ func (r *AdapterBuilder) Build(ctx core.ExecutionContext) core.Executable {
 	compound.AddStep(&utils.SimpleCtxExecutable{
 		StepName: "Adapter Server",
 		ExecuteFunc: func(ctx core.ExecutionContext, cr *netcrackerv1.DbaasRedisAdapter, log *zap.Logger) error {
-			return RunDBaaSServer(spec, redisClient, kubeClient, runtimeScheme, logger, vaultHelper, request.Namespace, true)
+			return RunDBaaSServer(spec, redisClient, kubeClient, runtimeScheme, logger, request.Namespace, true)
 		},
 	})
 

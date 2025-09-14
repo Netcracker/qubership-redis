@@ -25,7 +25,6 @@ const (
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
-var VaultPolicy string = fmt.Sprintf("length = 16\nrule \"charset\" {\n  charset = \"%s\"\n}\n", Charset)
 var RedisContainerEntryPoint = []string{"/run_entry.sh"}
 
 var TLSSecretNamePattern = "%s-tls"

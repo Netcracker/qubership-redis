@@ -3,7 +3,6 @@ package redis
 import (
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
-	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/steps"
 	utils2 "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
 	netcrackerv1 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl/utils"
@@ -60,15 +59,6 @@ func (r *RedisBuilder) Build(ctx core.ExecutionContext) core.Executable {
 		},
 	})
 
-	if spec.Spec.VaultRegistration.Enabled {
-		compound.AddStep(&steps.MoveSecretToVault{
-			SecretName:        spec.Spec.Redis.SecretName,
-			PolicyName:        serviceName,
-			Policy:            common.VaultPolicy,
-			VaultRegistration: &spec.Spec.VaultRegistration,
-		})
-	}
-
 	compound.AddStep(&utils.SimpleCtxExecutable{
 		StepName: "Redis ConfigMap",
 		ExecuteFunc: func(ctx core.ExecutionContext, cr *netcrackerv1.DbaasRedisAdapter, log *zap.Logger) error {
@@ -122,7 +112,6 @@ func (r *RedisBuilder) Build(ctx core.ExecutionContext) core.Executable {
 				spec.Spec.Redis.TLS,
 				spec.Spec.Redis.PriorityClassName, spec.Spec.PartOf, spec.Spec.ManagedBy,
 			)
-			utils2.VaultPodSpec(&deployment.Spec.Template.Spec, common.RedisContainerEntryPoint, cr.Spec.VaultRegistration)
 
 			delErr := helperImpl.DeleteDeploymentAndPods(deployment.Name, request.Namespace, cr.Spec.WaitTimeout)
 			core.PanicError(delErr, log.Error, "Deletion failed")

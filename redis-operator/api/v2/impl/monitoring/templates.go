@@ -2,7 +2,6 @@ package monitoring
 
 import (
 	"fmt"
-
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
 	utils2 "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
@@ -126,9 +125,6 @@ func MonitoringDeployment(cr *netcrackerv1.DbaasRedisAdapter) *appsv1.Deployment
 	}
 
 	telegrafProcessCmd := "/sbin/tini -s -- telegraf 2>&1"
-	if cr.Spec.VaultRegistration.Enabled {
-		telegrafProcessCmd = fmt.Sprintf("%s %s", utils2.GetVaultEnvPath(), telegrafProcessCmd)
-	}
 
 	envs = append(envs,
 		utils2.GetPlainTextEnvVar("NAMESPACE", cr.Namespace),
@@ -226,8 +222,6 @@ func MonitoringDeployment(cr *netcrackerv1.DbaasRedisAdapter) *appsv1.Deployment
 		},
 	}
 
-	utils2.VaultPodSpec(&deployment.Spec.Template.Spec, []string{}, cr.Spec.VaultRegistration)
-	//TODO: The method above overrides command for monitoring, but it is not required because vault process is child in this case
 	//Restore command for pod
 	deployment.Spec.Template.Spec.Containers[0].Command = []string{}
 	deployment.Spec.Template.Spec.Containers[0].Args = []string{}

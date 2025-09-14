@@ -198,8 +198,6 @@ func RobotDeployment(cr *netcrackerv1.DbaasRedisAdapter) *v1.Deployment {
 		},
 	}
 
-	utils2.VaultPodSpec(&dc.Spec.Template.Spec, []string{"/docker-entrypoint.sh", "run-robot"}, cr.Spec.VaultRegistration)
-
 	utils2.TLSSpecUpdate(&dc.Spec.Template.Spec, common.RootCertPath, cr.Spec.Redis.TLS.TLS)
 
 	return dc

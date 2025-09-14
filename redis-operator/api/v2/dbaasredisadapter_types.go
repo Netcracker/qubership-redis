@@ -85,7 +85,6 @@ type DbaasAdapter struct {
 
 type DbaasAggregator struct {
 	Username                           string            `json:"username,omitempty"`
-	VaultPasswordPath                  string            `json:"vaultPasswordPath,omitempty"`
 	SecretName                         string            `json:"secretName,omitempty"`
 	Address                            string            `json:"address,omitempty"`
 	PhysicalDatabaseIdentifier         string            `json:"physicalDatabaseIdentifier,omitempty"`
@@ -113,12 +112,11 @@ type Redis struct {
 }
 
 type InfluxSettings struct {
-	Host              string `json:"host,omitempty"`
-	Database          string `json:"database,omitempty"`
-	RetentionPolicy   string `json:"retentionPolicy,omitempty"`
-	User              string `json:"user,omitempty"`
-	VaultPasswordPath string `json:"vaultPasswordPath,omitempty"`
-	SecretName        string `json:"secretName,omitempty"`
+	Host            string `json:"host,omitempty"`
+	Database        string `json:"database,omitempty"`
+	RetentionPolicy string `json:"retentionPolicy,omitempty"`
+	User            string `json:"user,omitempty"`
+	SecretName      string `json:"secretName,omitempty"`
 }
 
 type Monitoring struct {

@@ -9,9 +9,6 @@ import (
 	coreTest "github.com/Netcracker/qubership-dbaas-adapter-core/testing"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
-	mTypes "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/types"
-	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
-	vaultMocks "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/vault/mocks"
 	v2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	impl "github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl"
 	adapter "github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl/adapter"
@@ -21,14 +18,12 @@ import (
 	// "github.com/docker/distribution/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	appsv1 "k8s.io/api/apps/v1"
 	v1core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -161,7 +156,6 @@ func GenerateDefaultRedisSpec() *v2.DbaasRedisAdapter {
 				},
 				Aggregator: &v2.DbaasAggregator{
 					Username:                           "dbaas-aggregator-username",
-					VaultPasswordPath:                  "dbaas-aggregator-password-path",
 					SecretName:                         "dbaas-aggregator-credentials",
 					Address:                            "dbaas-address",
 					PhysicalDatabaseIdentifier:         "ind",
@@ -180,12 +174,11 @@ func GenerateDefaultRedisSpec() *v2.DbaasRedisAdapter {
 				Install:     true,
 				Resources:   rr,
 				InfluxDB: &v2.InfluxSettings{
-					Host:              "influxhost",
-					Database:          "influxdb",
-					RetentionPolicy:   "influxretentionpolicy",
-					User:              "influxuser",
-					VaultPasswordPath: "influx-vault-password-path",
-					SecretName:        "redis-monitoring-agent-client-secret",
+					Host:            "influxhost",
+					Database:        "influxdb",
+					RetentionPolicy: "influxretentionpolicy",
+					User:            "influxuser",
+					SecretName:      "redis-monitoring-agent-client-secret",
 				},
 			},
 			RobotTests: v2.RobotTests{
@@ -215,11 +208,6 @@ func GenerateDefaultRedisSpec() *v2.DbaasRedisAdapter {
 					},
 				},
 			},
-			VaultRegistration: mTypes.VaultRegistration{
-				Enabled:                true,
-				Path:                   "secret",
-				InitContainerResources: rr,
-			},
 		},
 	}
 }
@@ -241,8 +229,6 @@ func GenerateDefaultRedisTestCase(t *testing.T,
 
 	utilsHelp.Client = fakeClient
 
-	redisServiceSpec.Spec.VaultRegistration.Enabled = false
-
 	caseStruct := &CaseStruct{
 		name:      testName,
 		nameSpace: nameSpace,
@@ -262,7 +248,6 @@ func GenerateDefaultRedisTestCase(t *testing.T,
 			constants.ContextLogger:                core.GetLogger(true),
 			"contextResourceOwner":                 redisServiceSpec, //todo hardcode replace
 			constants.ContextServiceDeploymentInfo: map[string]string{},
-			constants.ContextVault:                 &vaultMocks.FakeVaultHelper{},
 			mUtils.ContextRedis:                    fakeRedis,
 		}),
 		ctxToReplaceAfterServiceBuilt: map[string]interface{}{
@@ -335,61 +320,6 @@ func TestExecutionCheck(t *testing.T) {
 			cs.executor.SetExecutable(cs.builder.Build(cs.ctx))
 			return *cs
 		},
-		// func() CaseStruct {
-		// 	cs := GenerateDefaultRedisWrapper(t,
-		// 		"Vault: Dbaas Adapter Schema")
-
-		// 	spec := cs.ctx.Get(constants.ContextSpec).(*v2.DbaasRedisAdapter)
-
-		// 	aggregatorServer := coreTest.GetTestHttpAggregatorServer(string("v1"),
-		// 		"admin", "admin", "redis", "redis", false)
-		// 	defer aggregatorServer.Close()
-		// 	aggAddress := aggregatorServer.URL
-
-		// 	spec.Spec.Dbaas.Aggregator.Address = aggAddress
-
-		// 	vaultImpl := cs.ctx.Get(constants.ContextVault).(vault.FakeVaultHelper)
-		// 	vaultImpl.On("CheckSecretExists", mock.Anything).Return(false, make(map[string]interface{}), nil)
-		// 	vaultImpl.On("GeneratePassword", mock.Anything).Return(uuid.Generate().String(), nil)
-		// 	vaultImpl.On("StorePassword", mock.Anything, mock.Anything).Return(nil)
-		// 	spec.Spec.VaultRegistration.Enabled = true
-		// 	spec.Spec.Dbaas.Adapter.ApiVersion = "v1"
-		// 	cs.ctx.Set(constants.ContextSpec, spec)
-		// 	cs.ctx.Set(constants.ContextVault, vaultImpl)
-		// 	cs.executor.SetExecutable(cs.builder.Build(cs.ctx))
-		// 	return *cs
-		// },
-		func() CaseStruct {
-			cs := GenerateDefaultRedisWrapper(t,
-				"Vault: Redis Only Schema")
-			spec := cs.ctx.Get(constants.ContextSpec).(*v2.DbaasRedisAdapter)
-			spec.Spec.Dbaas.Install = false
-			cs.ctx.Set(constants.ContextSpec, spec)
-			cs.executor.SetExecutable(cs.builder.Build(cs.ctx))
-			return *cs
-		},
-		// func() CaseStruct {
-		// 	cs := GenerateDefaultRedisWrapper(t,
-		// 		"Vault: Check Redis PodSpec Update")
-		// 	spec := cs.ctx.Get(constants.ContextSpec).(*v2.DbaasRedisAdapter)
-		// 	vaultImpl := cs.ctx.Get(constants.ContextVault).(vault.FakeVaultHelper)
-		// 	vaultImpl.On("CheckSecretExists", mock.Anything).Return(false, make(map[string]interface{}), nil)
-		// 	vaultImpl.On("GeneratePassword", mock.Anything).Return(uuid.Generate().String(), nil)
-		// 	vaultImpl.On("StorePassword", mock.Anything, mock.Anything).Return(nil)
-		// 	spec.Spec.Dbaas.Install = false
-		// 	spec.Spec.VaultRegistration.Enabled = true
-		// 	cs.ctx.Set(constants.ContextSpec, spec)
-		// 	cs.ctx.Set(constants.ContextVault, vaultImpl)
-		// 	cs.ReadResultFunc = func(t *testing.T, err error) {
-		// 		checkDeploymentInitVault(
-		// 			"redis",
-		// 			[]string{"/run_entry.sh"},
-		// 			cs,
-		// 			t)
-		// 	}
-		// 	cs.executor.SetExecutable(cs.builder.Build(cs.ctx))
-		// 	return *cs
-		// },
 	}
 
 	tests := []CaseStruct{}
@@ -405,21 +335,6 @@ func TestExecutionCheck(t *testing.T) {
 			tt.ReadResultFunc(t, err)
 		})
 	}
-}
-
-func checkDeploymentInitVault(deploymentName string, containerArgs []string, cs *CaseStruct, t *testing.T) {
-	deployment := &appsv1.Deployment{}
-	client := cs.ctx.Get(constants.ContextClient).(client.Client)
-
-	err := client.Get(context.TODO(),
-		types.NamespacedName{Name: deploymentName, Namespace: "redis-namespace"}, deployment)
-	if err != nil {
-		t.Error(err)
-	}
-
-	assert.Equal(t, 1, len(deployment.Spec.Template.Spec.InitContainers))
-	assert.Equal(t, []string{utils.GetVaultEnvPath()}, deployment.Spec.Template.Spec.Containers[0].Command)
-	assert.Equal(t, containerArgs, deployment.Spec.Template.Spec.Containers[0].Args)
 }
 
 func Test_FullFeaturedConfigV2(t *testing.T) {

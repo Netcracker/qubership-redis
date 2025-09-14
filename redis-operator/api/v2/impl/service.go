@@ -6,8 +6,6 @@ import (
 
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
-	coreUtils "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
-	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/vault"
 	v2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl/adapter"
 	"github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl/monitoring"
@@ -38,7 +36,6 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 
 	spec := ctx.Get(constants.ContextSpec).(*v2.DbaasRedisAdapter)
 	log := ctx.Get(constants.ContextLogger).(*zap.Logger)
-	vaultHelper := ctx.Get(constants.ContextVault).(vault.VaultHelper)
 	request := ctx.Get(constants.ContextRequest).(reconcile.Request)
 	kubeClient := ctx.Get(constants.ContextClient).(client.Client)
 	runtimeScheme := ctx.Get(constants.ContextSchema).(*runtime.Scheme)
@@ -98,26 +95,6 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 					spec.Spec.Redis.PriorityClassName,
 					spec.Spec.PartOf, spec.Spec.ManagedBy,
 				)
-				// Make sure db is using vault - check init container
-				if vaultHelper != nil && len(dc.Spec.Template.Spec.InitContainers) > 0 {
-
-					//Update vault env variables
-					coreUtils.VaultPodSpec(&dc.Spec.Template.Spec, common.RedisContainerEntryPoint, spec.Spec.VaultRegistration)
-
-					//Check credentials in vault (MoveSecretStep)
-
-					secretName := fmt.Sprintf("%s-credentials", redisName)
-					passExists, _, err := vaultHelper.CheckSecretExists(secretName)
-					core.HandleError(err, log.Error, fmt.Sprintf("Failed checking %s redis database password in Vault", redisName))
-
-					if !passExists {
-						log.Error(fmt.Sprintf("Password for %s redis database not found in Vault! Will be generated...", redisName))
-						generatedPass, genErr := vaultHelper.GeneratePassword(common.VaultPolicy)
-						core.PanicError(genErr, log.Error, fmt.Sprintf("Failed generating vault pass for %s", redisName))
-						passErr := vaultHelper.StorePassword(secretName, generatedPass)
-						core.PanicError(passErr, log.Error, fmt.Sprintf("Failed creating %s redis database password for Vault", redisName))
-					}
-				}
 
 				if spec.Spec.Redis.TLS.ClusterIssuerName != "" {
 					common.UpdateCertificate(spec.Spec.Redis.TLS.Enabled, spec.Spec.Redis.TLS.ClusterIssuerName, dc.ObjectMeta.Name, request.Namespace, kubeClient, runtimeScheme)
@@ -168,14 +145,13 @@ func (r *RedisPreDeployBuilder) Build(ctx core.ExecutionContext) core.Executable
 		spec := ctx.Get(constants.ContextSpec).(*v2.DbaasRedisAdapter)
 		kubeClient := ctx.Get(constants.ContextClient).(client.Client)
 		request := ctx.Get(constants.ContextRequest).(reconcile.Request)
-		vaultHelper := ctx.Get(constants.ContextVault).(vault.VaultHelper)
 		runtimeScheme := ctx.Get(constants.ContextSchema).(*runtime.Scheme)
 		if !ctx.Get(constants.ContextSpecHasChanges).(bool) {
 			//we need this step for upgrade/reconcile scenarios, when spec is not change and Builder is not executed
 			compound.AddStep(&utils.SimpleCtxExecutable{
 				StepName: "Adapter Server",
 				ExecuteFunc: func(ctx core.ExecutionContext, cr *v2.DbaasRedisAdapter, log *zap.Logger) error {
-					return adapter.RunDBaaSServer(spec, redisClient, kubeClient, runtimeScheme, log, vaultHelper, request.Namespace, true)
+					return adapter.RunDBaaSServer(spec, redisClient, kubeClient, runtimeScheme, log, request.Namespace, true)
 				},
 			})
 
