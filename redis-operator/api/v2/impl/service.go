@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
