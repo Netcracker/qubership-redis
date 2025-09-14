@@ -85,7 +85,6 @@ spec:
     priorityClassName: {{ .Values.redis.priorityClassName | quote }}
     {{- end }}
     args: ["/etc/redis/redis.conf","--requirepass $(REDIS_PASSWORD)"]
-    {{- end }}
     {{- if .Values.redis.tls.enabled }}
     tls:
       enabled: {{ .Values.redis.tls.enabled }}
