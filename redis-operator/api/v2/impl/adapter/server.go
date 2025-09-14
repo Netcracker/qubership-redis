@@ -3,7 +3,6 @@ package adapter
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dbaas"

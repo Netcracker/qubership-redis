@@ -1,7 +1,6 @@
 package monitoring
 
 import (
-	"fmt"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
 	utils2 "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
