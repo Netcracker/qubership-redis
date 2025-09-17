@@ -27,7 +27,7 @@ securityContext:
 imagePullPolicy: Always
 
 operator:
-  dockerImage: ghcr.io/netcracker/qubership-redis-operator:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-operator:3.0.2
   initImage: to_replace
   priorityClassName: ""
   resources:
@@ -148,7 +148,7 @@ redis:
 
 monitoringAgent:
   install: true
-  dockerImage: ghcr.io/netcracker/qubership-redis-monitoring-agent:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-monitoring-agent:3.0.2
   priorityClassName: ""
   nodeLabels:
   resources:
@@ -181,7 +181,7 @@ disasterRecovery:
 
 robotTests:
   install: false
-  dockerImage: ghcr.io/netcracker/qubership-redis-tests:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-tests:3.0.2
   priorityClassName: ""
   tags:
   nodeLabels:
