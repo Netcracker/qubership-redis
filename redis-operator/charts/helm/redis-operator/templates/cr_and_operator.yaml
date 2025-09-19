@@ -50,8 +50,11 @@ spec:
       {{- end }}
     {{- end }}
     runAsNonRoot: true
+    {{- $platform := .Values.PAAS_PLATFORM | default "KUBERNETES" -}}
+    {{- if ne $platform "OPENSHIFT" }}
     seccompProfile:
       type: RuntimeDefault
+    {{- end }}
   dbaas:
     install: {{template "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.dbaas.install "envVar" .Values.DBAAS_ENABLED "default" true ) }}
     adapter:
@@ -194,8 +197,11 @@ spec:
       {{ end }}
       securityContext:
         runAsNonRoot: true
+        {{- $platform := .Values.PAAS_PLATFORM | default "KUBERNETES" -}}
+        {{- if ne $platform "OPENSHIFT" }}
         seccompProfile:
           type: RuntimeDefault
+        {{- end }}
       containers:
         - name: operator
           image: {{template "find_image" (dict "deployName" "redisOperatorImage" "SERVICE_NAME" "redis-operator-image" "vals" .Values "default" .Values.operator.dockerImage) }}
