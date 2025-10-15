@@ -1,6 +1,6 @@
 module github.com/Netcracker/qubership-redis/redis-monitoring-agent
 
-go 1.23.0
+go 1.24.6
 
 require (
 	github.com/Netcracker/qubership-nosqldb-operator-core v1.0.7
