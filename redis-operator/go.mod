@@ -1,6 +1,6 @@
 module github.com/Netcracker/qubership-redis/redis-operator
 
-go 1.25.0
+go 1.24.6
 
 require (
 	github.com/Netcracker/qubership-dbaas-adapter-core v0.10.3
@@ -105,7 +105,7 @@ require (
 	github.com/prometheus/procfs v0.17.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/swaggo/files/v2 v2.0.2 // indirect
 	github.com/swaggo/swag v1.16.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
