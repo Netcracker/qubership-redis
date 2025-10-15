@@ -26,8 +26,10 @@ RUN chown 1001:1001 /opt/telegraf/scripts/get_metrics.sh
 #timeout tool has issues with alpine 10+
 #fix for "timeout: unrecognized option: t"
 RUN apk update \
-    && apk add --no-cache coreutils redis tini gcompat \
+    && apk add --no-cache coreutils tini gcompat \
     && apk upgrade --no-cache
+
+COPY --from=redis /usr/local/bin/redis-server /usr/bin/redis-server
 COPY --from=redis /usr/local/bin/redis-cli /usr/bin/redis-cli
 
 # Fixed "not found" issue
