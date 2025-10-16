@@ -34,7 +34,6 @@ COPY build/bin /usr/local/bin
 
 RUN apk update \
     && apk add --no-cache curl \
-    && apk upgrade curl \
     && rm -rf /var/cache/apk/*
 
 RUN chmod +x /usr/local/bin/entrypoint \
