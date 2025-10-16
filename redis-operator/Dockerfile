@@ -33,7 +33,7 @@ COPY --from=builder /src/charts/helm/redis-operator/ helm-templates/redis-operat
 COPY build/bin /usr/local/bin
 
 RUN apk update \
-    && apk add --no-cache curl \
+    && apk add --no-cache "curl=8.16.0-r0" \
     && rm -rf /var/cache/apk/*
 
 RUN chmod +x /usr/local/bin/entrypoint \
