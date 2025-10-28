@@ -17,7 +17,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
       -ldflags "-s -w" \
       ./main.go
 
-FROM alpine:3.22.1
+FROM alpine:3.22.2
 
 ENV WORKDIR=/opt/operator/ \
     OPERATOR=/usr/local/bin/dbaas-redis-operator \

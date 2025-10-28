@@ -15,8 +15,8 @@ RUN mkdir -p bin \
        -gcflags "all=-trimpath=${GOPATH}" \
        -asmflags "all=-trimpath=${GOPATH}"
 
-FROM redis:7.4.5-alpine AS redis
-FROM telegraf:1.35.4-alpine
+FROM redis:8.2.2-alpine AS redis
+FROM telegraf:1.36.2-alpine
 
 USER root
 COPY health.sh /health.sh
@@ -26,8 +26,10 @@ RUN chown 1001:1001 /opt/telegraf/scripts/get_metrics.sh
 #timeout tool has issues with alpine 10+
 #fix for "timeout: unrecognized option: t"
 RUN apk update \
-    && apk add --no-cache coreutils redis tini gcompat \
+    && apk add --no-cache coreutils tini gcompat \
     && apk upgrade --no-cache
+
+COPY --from=redis /usr/local/bin/redis-server /usr/bin/redis-server
 COPY --from=redis /usr/local/bin/redis-cli /usr/bin/redis-cli
 
 # Fixed "not found" issue
