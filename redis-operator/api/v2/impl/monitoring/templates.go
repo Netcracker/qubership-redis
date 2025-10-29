@@ -144,19 +144,21 @@ func MonitoringDeployment(cr *netcrackerv1.DbaasRedisAdapter) *appsv1.Deployment
 			Name:      serviceName,
 			Namespace: cr.Namespace,
 			Labels: map[string]string{
-				"app":               serviceName,
-				utils.AppName:       serviceName,
-				utils.AppInstance:   cr.Spec.Instance,
-				utils.AppVersion:    cr.Spec.ArtifactDescriptorVersion,
-				utils.AppComponent:  "operator",
-				utils.AppPartOf:     cr.Spec.PartOf,
-				utils.AppManagedBy:  cr.Spec.ManagedBy,
-				utils.AppTechnology: "",
+				"app":                     serviceName,
+				utils.AppName:             serviceName,
+				utils.AppInstance:         cr.Spec.Instance,
+				utils.AppVersion:          cr.Spec.ArtifactDescriptorVersion,
+				utils.AppComponent:        "operator",
+				utils.AppPartOf:           cr.Spec.PartOf,
+				utils.AppManagedBy:        cr.Spec.ManagedBy,
+				utils.AppTechnology:       "go",
+				utils.DeploymentSessionId: cr.Spec.DeploymentSessionId,
+				"name":                    serviceName,
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": serviceName},
+				MatchLabels: map[string]string{"app": serviceName, "name": serviceName},
 			},
 			Strategy: appsv1.DeploymentStrategy{
 				Type: appsv1.RecreateDeploymentStrategyType,
@@ -170,8 +172,8 @@ func MonitoringDeployment(cr *netcrackerv1.DbaasRedisAdapter) *appsv1.Deployment
 						utils.AppInstance:   cr.Spec.Instance,
 						utils.AppVersion:    cr.Spec.ArtifactDescriptorVersion,
 						utils.AppComponent:  "operator",
-						utils.AppPartOf:     cr.Spec.PartOf,
-						utils.AppTechnology: "",
+						utils.AppTechnology: "go",
+						"name":              serviceName,
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -235,7 +237,14 @@ func Service(cr *netcrackerv1.DbaasRedisAdapter) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,
 			Namespace: cr.Namespace,
-			Labels:    map[string]string{"app": serviceName, "name": serviceName},
+			Labels: map[string]string{
+				"app":                     serviceName,
+				utils.AppName:             serviceName,
+				utils.AppPartOf:           cr.Spec.PartOf,
+				utils.AppManagedBy:        cr.Spec.ManagedBy,
+				utils.DeploymentSessionId: cr.Spec.DeploymentSessionId,
+				"name":                    serviceName,
+			},
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{

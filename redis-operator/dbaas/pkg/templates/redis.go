@@ -24,6 +24,7 @@ const (
 	AppProcByOperator    = "app.kubernetes.io/processed-by-operator"
 	AppTechnology        = "app.kubernetes.io/technology"
 	AppPartOf            = "app.kubernetes.io/part-of"
+	DeploymentSessionId  = "deployment.netcracker.com/sessionId"
 )
 
 func GetRedisDeploymentTemplate(

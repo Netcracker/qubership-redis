@@ -304,6 +304,7 @@ Common redis resources labels
 app.kubernetes.io/version: {{ default "" .Values.ARTIFACT_DESCRIPTOR_VERSION | trunc 63 | trimAll "-_." }}
 app.kubernetes.io/part-of: {{ default "dbaas-redis" .Values.PART_OF }}
 app.kubernetes.io/managed-by: {{ default "operator" .Values.MANAGED_BY }}
+deployment.netcracker.com/sessionId: "{{ default "default-session-id" .Values.DEPLOYMENT_SESSION_ID }}"
 {{- end -}}
 
 {{- define "redis.monitoredImages" -}}

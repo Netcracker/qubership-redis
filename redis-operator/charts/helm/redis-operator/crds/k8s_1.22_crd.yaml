@@ -152,6 +152,8 @@ spec:
                 required:
                 - install
                 type: object
+              deploymentSessionId:
+                type: string
               deploymentVersion:
                 type: string
               imagePullPolicy:

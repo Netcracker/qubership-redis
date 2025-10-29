@@ -76,7 +76,14 @@ func Service(cr *netcrackerv1.DbaasRedisAdapter) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceName,
 			Namespace: cr.Namespace,
-			Labels:    map[string]string{"app": ServiceName},
+			Labels: map[string]string{
+				"app":                     ServiceName,
+				utils.AppName:             ServiceName,
+				utils.AppPartOf:           cr.Spec.PartOf,
+				utils.AppManagedBy:        cr.Spec.ManagedBy,
+				utils.DeploymentSessionId: cr.Spec.DeploymentSessionId,
+				"name":                    ServiceName,
+			},
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{

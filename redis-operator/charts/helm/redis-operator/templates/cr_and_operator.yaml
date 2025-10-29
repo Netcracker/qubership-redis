@@ -17,6 +17,7 @@ metadata:
     app.kubernetes.io/processed-by-operator: "redis-operator"
   name: {{ .Values.name }}
 spec:
+  deploymentSessionId: "{{ .Values.DEPLOYMENT_SESSION_ID }}"
   partOf: {{ .Values.PART_OF }}
   artifactDescriptorVersion: {{ .Values.ARTIFACT_DESCRIPTOR_VERSION | trunc 63 | trimAll "-_." }}
   managedBy: {{ .Values.MANAGED_BY }}
@@ -174,6 +175,7 @@ metadata:
     app.kubernetes.io/part-of: {{ .Values.PART_OF }}
     app.kubernetes.io/managed-by: {{ .Values.MANAGED_BY }}
     app.kubernetes.io/technology: 'go'
+    deployment.netcracker.com/sessionId: "{{ .Values.DEPLOYMENT_SESSION_ID }}"
 spec:
   replicas: 1
   selector:

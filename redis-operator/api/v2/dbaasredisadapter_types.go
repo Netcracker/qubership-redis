@@ -69,6 +69,7 @@ type DbaasRedisAdapterSpec struct {
 	ServiceAccountName        string                  `json:"serviceAccountName"`
 	ImagePullPolicy           v1.PullPolicy           `json:"imagePullPolicy,omitempty" common:"true"`
 	TLS                       `json:"tls,omitempty" common:"true"`
+	DeploymentSessionId       string `json:"deploymentSessionId,omitempty"`
 	ArtifactDescriptorVersion string `json:"artifactDescriptorVersion,omitempty"`
 	PartOf                    string `json:"partOf,omitempty"`
 	ManagedBy                 string `json:"managedBy,omitempty"`
