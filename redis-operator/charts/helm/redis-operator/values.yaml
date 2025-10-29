@@ -215,7 +215,7 @@ crd:
 # The name of the Service exposed for the database.
 SERVICE_NAME: 'dbaas-redis-operator'
 # Microservice belonging to a group
-PART_OF: 'dbaas-redis-operator'
+PART_OF: 'dbaas-redis'
 # Delimiter for labels
 DELIMITER: "-"
 # Artifact descriptor version which is installed.
