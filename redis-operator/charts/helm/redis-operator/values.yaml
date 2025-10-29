@@ -26,6 +26,7 @@ securityContext:
 
 imagePullPolicy: Always
 
+DEPLOYMENT_SESSION_ID: "default-session-id"
 operator:
   dockerImage: ghcr.io/netcracker/qubership-redis-operator:main
   initImage: to_replace
