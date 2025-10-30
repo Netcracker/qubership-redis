@@ -23,7 +23,7 @@ The prerequisites to deploy DBaaS Redis Operator are as follows:
     name: nc-role
   rules:
     - apiGroups:
-        - qubership.org
+        - netcracker.com
       resources:
         - '*'
       verbs:

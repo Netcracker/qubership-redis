@@ -1,5 +1,5 @@
 {{/* Sticky deploymentVersion: reuse from live CR; fallback to deterministic hash*/}}
-{{- $cr := lookup "qubership.org/v2" "DbaasRedisAdapter" .Release.Namespace .Values.name -}}
+{{- $cr := lookup "netcracker.com/v2" "DbaasRedisAdapter" .Release.Namespace .Values.name -}}
 {{- $deploymentVersion := "" -}}
 {{- if $cr -}}
   {{- $deploymentVersion = dig "spec" "deploymentVersion" "" $cr -}}
@@ -8,7 +8,7 @@
   {{- $seed := printf "%s|%s|%s" .Values.name .Release.Namespace (coalesce .Values.DEPLOYMENT_RESOURCE_NAME .Values.SERVICE_NAME) -}}
   {{- $deploymentVersion = (sha256sum $seed | trunc 10) -}}
 {{- end -}}
-apiVersion: qubership.org/v2
+apiVersion: netcracker.com/v2
 kind: DbaasRedisAdapter
 metadata:
   labels:
