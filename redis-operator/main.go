@@ -83,7 +83,7 @@ func main() {
 		Scheme:                 scheme,
 		HealthProbeBindAddress: "0",
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "aaeaee54.qubership.org",
+		LeaderElectionID:       "aaeaee54.netcracker.com",
 		Cache:                  cache.Options{DefaultNamespaces: map[string]cache.Config{getWatchNamespace(): {}}},
 		WebhookServer:          webhook.NewServer(webhook.Options{Port: 8070}),
 		Metrics:                server.Options{BindAddress: "0"},

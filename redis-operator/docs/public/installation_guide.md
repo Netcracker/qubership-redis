@@ -23,7 +23,7 @@ The prerequisites to deploy DBaaS Redis Operator are as follows:
     name: nc-role
   rules:
     - apiGroups:
-        - qubership.org
+        - netcracker.com
       resources:
         - '*'
       verbs:
@@ -305,7 +305,7 @@ dbaas:
 redis:
   maxmem: 200mb
   password: redis
-  dockerImage: "redis:7.4.2-alpine"
+  dockerImage: "redis:7.4.6-alpine"
   nodeLabels:
     region: databases
   parameters:
