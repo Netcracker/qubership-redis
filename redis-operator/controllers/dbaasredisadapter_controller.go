@@ -39,9 +39,9 @@ type DbaasRedisAdapterReconciler struct {
 	Reconciler reconcile.Reconciler
 }
 
-//+kubebuilder:rbac:groups=qubership.org,resources=dbaasredisadapters,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=qubership.org,resources=dbaasredisadapters/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=qubership.org,resources=dbaasredisadapters/finalizers,verbs=update
+//+kubebuilder:rbac:groups=netcracker.com,resources=dbaasredisadapters,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=netcracker.com,resources=dbaasredisadapters/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=netcracker.com,resources=dbaasredisadapters/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

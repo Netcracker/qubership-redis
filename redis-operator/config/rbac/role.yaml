@@ -1,13 +1,11 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: manager-role
 rules:
 - apiGroups:
-  - qubership.org
+  - netcracker.com
   resources:
   - dbaasredisadapters
   verbs:
@@ -19,13 +17,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - qubership.org
+  - netcracker.com
   resources:
   - dbaasredisadapters/finalizers
   verbs:
   - update
 - apiGroups:
-  - qubership.org
+  - netcracker.com
   resources:
   - dbaasredisadapters/status
   verbs:
