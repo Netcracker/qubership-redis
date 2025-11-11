@@ -86,7 +86,7 @@ redis:
       ca_crt:
   password: redis
   secretName: redis-credentials
-  dockerImage: "redis:8.0.6-alpine"
+  dockerImage: "redis:8.2.3-alpine"
   priorityClassName: ""
   nodeLabels:
   parameters:
