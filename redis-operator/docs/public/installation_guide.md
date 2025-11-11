@@ -305,7 +305,7 @@ dbaas:
 redis:
   maxmem: 200mb
   password: redis
-  dockerImage: "redis:7.4.6-alpine"
+  dockerImage: "redis:8.0.6-alpine"
   nodeLabels:
     region: databases
   parameters:
