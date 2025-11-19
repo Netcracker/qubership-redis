@@ -1,30 +1,26 @@
-# permissions for end users to edit dbaasredisadapters.
+# permissions for end users to view dbaasredisadapters.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: dbaasredisadapter-editor-role
+    app.kubernetes.io/instance: dbaasredisadapter-viewer-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: redis-oper
     app.kubernetes.io/part-of: redis-oper
     app.kubernetes.io/managed-by: kustomize
-  name: dbaasredisadapter-editor-role
+  name: dbaasredisadapter-viewer-role
 rules:
 - apiGroups:
-  - qubership.org
+  - netcracker.com
   resources:
   - dbaasredisadapters
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
-  - qubership.org
+  - netcracker.com
   resources:
   - dbaasredisadapters/status
   verbs:

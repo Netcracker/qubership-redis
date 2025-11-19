@@ -1,4 +1,4 @@
-domain: qubership.org
+domain: netcracker.com
 layout:
 - go.kubebuilder.io/v3
 multigroup: true
@@ -12,15 +12,15 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: qubership.org
+  domain: netcracker.com
   kind: DbaasRedisAdapter
   path: github.com/Netcracker/qubership-redis/redis-operator/api/v2
   version: v2
 - api:
     crdVersion: v1
     namespaced: true
-  domain: qubership.org
-  group: qubership.org
+  domain: netcracker.com
+  group: netcracker.com
   kind: DbaasRedisAdapter
   path: github.com/Netcracker/qubership-redis/redis-operator/api/v1
   version: v1

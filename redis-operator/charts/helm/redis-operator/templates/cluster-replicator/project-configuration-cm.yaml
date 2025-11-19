@@ -63,7 +63,7 @@ data:
             jsonPath: "$.spec.status"
       - entity: "role.rbac.authorization.k8s.io/v1"
       - entity: "rolebinding.rbac.authorization.k8s.io/v1"
-      - entity: "facadeservice.qubership.org/v1alpha"
+      - entity: "facadeservice.netcracker.com/v1alpha"
       - entity: "cronjob.batch/v1beta1"
       - entity: "job.batch/v1"
       - entity: "daemonset.apps/v1"

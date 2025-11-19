@@ -16,7 +16,7 @@ limitations under the License.
 
 // Package v2 contains API Schema definitions for the  v2 API group
 // +kubebuilder:object:generate=true
-// +groupName=qubership.org
+// +groupName=netcracker.com
 package v2
 
 import (
@@ -26,7 +26,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "qubership.org", Version: "v2"}
+	GroupVersion = schema.GroupVersion{Group: "netcracker.com", Version: "v2"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
