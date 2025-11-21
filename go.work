@@ -4,3 +4,4 @@ use (
 	./redis-monitoring-agent/source
 	./redis-operator
 )
+
