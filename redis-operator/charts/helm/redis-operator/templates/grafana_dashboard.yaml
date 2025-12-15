@@ -7,7 +7,6 @@ metadata:
   labels:
     app: grafana
     {{- include "redis.defaultLabels" . | nindent 4 }}
-  annotations:
 spec:
   name: redis-{{ .Release.Namespace }}.json
   json: >
