@@ -1,11 +1,14 @@
 package robotTests
 
 import (
+	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
+	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/types"
 	utils2 "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
 	netcrackerv1 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl/adapter"
@@ -15,11 +18,16 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	ServiceName = "robot-tests"
-	Name        = "name"
+	ServiceName                   = "robot-tests"
+	Name                          = "name"
+	IntegrationTestsStatusReason  = "IntegrationTestsExecutionStatus"
+	TestStatusFailed              = "Failed"
+	TestStatusInProgress          = "In Progress"
+	DefaultTestResultCheckTimeout = 900 // 15 minutes
 )
 
 type RobotTestsCompound struct {
@@ -41,8 +49,8 @@ func (r *RobotBuilder) Build(ctx core.ExecutionContext) core.Executable {
 	compound.AddStep(&utils.SimpleCtxExecutable{
 		StepName: "Robot Deployment",
 		ExecuteFunc: func(ctx core.ExecutionContext, cr *netcrackerv1.DbaasRedisAdapter, log *zap.Logger) error {
-			// request := ctx.Get(constants.ContextRequest).(reconcile.Request)
 			helperImpl := ctx.Get(constants.KubernetesHelperImpl).(core.KubernetesHelper)
+			kubeClient := ctx.Get(constants.ContextClient).(client.Client)
 
 			dc := RobotDeployment(cr)
 
@@ -59,6 +67,19 @@ func (r *RobotBuilder) Build(ctx core.ExecutionContext) core.Executable {
 				cr.Spec.WaitTimeout)
 			core.PanicError(err, log.Error, "RobotTests failed")
 
+			log.Debug("Checking robot tests execution results")
+			testsFailed, testStatusSummary := checkIfTestsFailed(kubeClient, cr.Namespace, DefaultTestResultCheckTimeout, log)
+			if testsFailed {
+				log.Error(fmt.Sprintf("Robot tests failed: %s", testStatusSummary))
+				err := updateCRStatusOnTestFailure(kubeClient, cr, testStatusSummary, log)
+				if err != nil {
+					log.Error(fmt.Sprintf("Failed to update CR status on test failure: %v", err))
+					return err
+				}
+				return fmt.Errorf("Redis critical tests failed: %s", testStatusSummary)
+			}
+
+			log.Info(fmt.Sprintf("Robot tests completed successfully: %s", testStatusSummary))
 			return nil
 		},
 	})
@@ -201,4 +222,81 @@ func RobotDeployment(cr *netcrackerv1.DbaasRedisAdapter) *v1.Deployment {
 	utils2.TLSSpecUpdate(&dc.Spec.Template.Spec, common.RootCertPath, cr.Spec.Redis.TLS.TLS)
 
 	return dc
+}
+
+func checkIfTestsFailed(kubeClient client.Client, namespace string, maxTimeout int, log *zap.Logger) (bool, string) {
+	startTime := time.Now()
+
+	for time.Since(startTime).Seconds() < float64(maxTimeout) {
+		deployment := &v1.Deployment{}
+		err := kubeClient.Get(context.TODO(), client.ObjectKey{
+			Name:      ServiceName,
+			Namespace: namespace,
+		}, deployment)
+
+		if err != nil {
+			log.Debug(fmt.Sprintf("Failed to get robot-tests deployment, retrying: %v", err))
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		found := false
+		for _, condition := range deployment.Status.Conditions {
+			if condition.Reason == IntegrationTestsStatusReason {
+				found = true
+				testStatus := string(condition.Type)
+				testStatusSummary := condition.Message
+				log.Debug(fmt.Sprintf("Found test execution status: %s, summary: %s", testStatus, testStatusSummary))
+
+				if testStatus == TestStatusInProgress {
+					log.Debug("Test execution is still in progress, waiting...")
+					break
+				}
+
+				if testStatus == TestStatusFailed {
+					return true, testStatusSummary
+				}
+
+				return false, testStatusSummary
+			}
+		}
+
+		if !found {
+			log.Debug("Test execution status not found yet, waiting...")
+		}
+		time.Sleep(5 * time.Second)
+	}
+
+	log.Warn(fmt.Sprintf("Timeout reached while waiting for test results (timeout: %d)", maxTimeout))
+	return true, "Timeout reached while waiting for test results. Please check robot-tests logs for more information."
+}
+
+func updateCRStatusOnTestFailure(kubeClient client.Client, cr *netcrackerv1.DbaasRedisAdapter, message string, log *zap.Logger) error {
+	latestCR := &netcrackerv1.DbaasRedisAdapter{}
+	err := kubeClient.Get(context.TODO(), client.ObjectKey{
+		Name:      cr.Name,
+		Namespace: cr.Namespace,
+	}, latestCR)
+	if err != nil {
+		return fmt.Errorf("failed to get CR instance: %w", err)
+	}
+
+	now := metav1.Now()
+	failedCondition := types.ServiceStatusCondition{
+		Type:               "Failed",
+		Status:             true,
+		Reason:             "RobotTestsFailed",
+		Message:            fmt.Sprintf("Redis critical tests failed: %s", message),
+		LastTransitionTime: now,
+	}
+
+	latestCR.Status.Conditions = []types.ServiceStatusCondition{failedCondition}
+
+	err = kubeClient.Status().Update(context.TODO(), latestCR)
+	if err != nil {
+		return fmt.Errorf("failed to update CR status: %w", err)
+	}
+
+	log.Info(fmt.Sprintf("Updated CR status to Failed due to test failure: %s", message))
+	return nil
 }
