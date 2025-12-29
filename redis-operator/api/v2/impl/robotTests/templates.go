@@ -69,6 +69,9 @@ func (r *RobotBuilder) Build(ctx core.ExecutionContext) core.Executable {
 
 			log.Debug("Checking robot tests execution results")
 			testsFailed, testStatusSummary := checkIfTestsFailed(kubeClient, cr.Namespace, DefaultTestResultCheckTimeout, log)
+			// Temp
+			testsFailed = true
+			testStatusSummary = "KSM TEST FAILED"
 			if testsFailed {
 				log.Error(fmt.Sprintf("Robot tests failed: %s", testStatusSummary))
 				err := updateCRStatusOnTestFailure(kubeClient, cr, testStatusSummary, log)
