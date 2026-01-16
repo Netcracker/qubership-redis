@@ -50,7 +50,7 @@ dbaas:
     createDBTimeout: 60
   aggregator:
     username: cluster-dba
-    password: Bnmq5567_PO
+    password: ""
     secretName: dbaas-aggregator-credentials
     address: "http://dbaas-aggregator.dbaas:8080"
     physicalDatabaseIdentifier: "redis"
