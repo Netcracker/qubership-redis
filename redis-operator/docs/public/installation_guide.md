@@ -187,14 +187,14 @@ The operator parameters are specified below.
 The list of DBaaS Redis Adapter parameters is as follows:
 
 | Parameter                                             | Mandatory | Type   | Default                            | Description                                                                              |
-| ----------------------------------------------------- | --------- | ------ | ---------------------------------- | ---------------------------------------------------------------------------------------- |
+|-------------------------------------------------------|-----------|--------|------------------------------------|------------------------------------------------------------------------------------------|
 | `dbaas.install`                                       | false     | bool   | true                               | If the DBaaS adapter needs to be installed.                                              |
 | `dbaas.aggregator.physicalDatabaseIdentifier`         | false     | string | redis                              | The database identifier in the DBaaS aggregator.                                         |
 | `dbaas.aggregator.physicalDatabaseLabels`             | false     | string | ""                                 | The database labels in the DBaaS aggregator.                                             |
 | `dbaas.aggregator.dbaasAggregatorRegistrationAddress` | false     | string | http://dbaas-aggregator.dbaas:8080 | The address of the DBaaS aggregator.                                                     |
 | `dbaas.aggregator.address`                            | false     | string | http://dbaas-aggregator.dbaas:8080 | The address of the aggregator where the adapter registers its physical database cluster. |
 | `dbaas.aggregator.username`                           | false     | string | cluster-dba                        | The username for DBaaS adapter registration in DBaaS.                                    |
-| `dbaas.aggregator.password`                           | false     | string | Bnmq5567_PO                        | The password for DBaaS adapter registration in DBaaS.                                    |
+| `dbaas.aggregator.password`                           | false     | string |                                    | The password for DBaaS adapter registration in DBaaS.                                    |
 | `dbaas.aggregator.secretName`                         | false     | string | dbaas-aggregator-credentials       | The name of the secret that holds Aggregator credentials.                                |
 | `dbaas.adapter.username`                              | false     | string | dbaas-aggregator                   | The username for the database adapter.                                                   |
 | `dbaas.adapter.password`                              | false     | string | dbaas-aggregator                   | The password for the database adapter.                                                   |
@@ -297,7 +297,7 @@ dbaas:
     password: dbaas-aggregator
   aggregator:
     username: cluster-dba
-    password: Bnmq5567_PO
+    password: <PASSWORD>
     address: "http://dbaas-aggregator.dbaas:8080"
     physicalDatabaseIdentifier: "redis"
     dbaasAggregatorRegistrationAddress: "http://dbaas-aggregator.dbaas:8080"
