@@ -23,7 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
@@ -58,11 +60,21 @@ func (r *DbaasRedisAdapterReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	return r.Reconciler.Reconcile(ctx, req)
 }
 
+func ignoreStatusUpdatePredicate() predicate.Predicate {
+	return predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			// Ignore updates to CR status in which case metadata.Generation does not change
+			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
+		},
+	}
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *DbaasRedisAdapterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Reconciler = newReconciler(mgr)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netcrackercomv2.DbaasRedisAdapter{}).
+		WithEventFilter(ignoreStatusUpdatePredicate()).
 		Complete(r)
 }
 
