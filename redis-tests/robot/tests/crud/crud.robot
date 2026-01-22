@@ -36,9 +36,6 @@ Preparation
     ...  Set Suite Variable  ${REDIS_HOST}  redis.${REDIS_NAMESPACE}
 
 *** Test Cases ***
-Test Always Fail
-    Fail    This test always fails
-
 Test Creating DB Via Dbaas Adapter
     [Tags]  redis  smoke  dbaas
     Skip If  '${DBAAS_ENABLED}' == 'false'  Redis Dbaas is not enabled. Skip test.
