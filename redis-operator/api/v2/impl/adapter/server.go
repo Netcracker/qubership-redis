@@ -141,6 +141,7 @@ func PrepareAdminService(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClie
 		log.Named("DBaaS Adapter"),
 		kubeClient,
 		runtimeScheme,
+		spec,
 		namespace,
 		redisPort,
 		*redisSpec.Resources,
