@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type AdministrationService struct {
@@ -46,6 +47,7 @@ type AdministrationService struct {
 	logger                            *zap.Logger
 	kubeClient                        client.Client
 	runtimeScheme                     *runtime.Scheme
+	owner                             *v2.DbaasRedisAdapter
 	namespace                         string
 	redisServicePort                  int
 	redisResources                    v1.ResourceRequirements
@@ -86,6 +88,7 @@ func NewAdministrationService(
 	logger *zap.Logger,
 	kubeClint client.Client,
 	runtimeScheme *runtime.Scheme,
+	owner *v2.DbaasRedisAdapter,
 	namespace string,
 	redisServicePort int,
 	redisResources v1.ResourceRequirements,
@@ -109,6 +112,7 @@ func NewAdministrationService(
 		logger:                  logger,
 		kubeClient:              kubeClint,
 		runtimeScheme:           runtimeScheme,
+		owner:                   owner,
 		namespace:               namespace,
 		redisServicePort:        redisServicePort,
 		redisResources:          redisResources,
@@ -343,7 +347,7 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 
 	type objectToCreate struct {
 		object client.Object
-		meta   metav1.ObjectMeta
+		meta   *metav1.ObjectMeta
 	}
 
 	var objectsToCreate []objectToCreate
@@ -361,21 +365,21 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 	envVarForRedisInstance := coreUtils.GetSecretEnvVar(redisPasswordConst, credsSecretName, constants.Password)
 
 	objectsToCreate = append(objectsToCreate,
-		objectToCreate{secret, secret.ObjectMeta})
+		objectToCreate{secret, &secret.ObjectMeta})
 
 	// Making ConfigMap
 	redisConfig := GetRedisDefaultConfigMap(adminService.kubeClient, adminService.namespace, logger)
 	adminService.setRedisDatabaseSettings(ctx, &redisConfig, &settings.RedisDbSettings)
 	configString := RedisMapConfigToString(redisConfig)
 	configMap := templates.GetRedisConfigTemplate(logicalDatabaseName, adminService.namespace, configString)
-	objectsToCreate = append(objectsToCreate, objectToCreate{configMap, configMap.ObjectMeta})
+	objectsToCreate = append(objectsToCreate, objectToCreate{configMap, &configMap.ObjectMeta})
 
 	// The Redis Service
 	redisService := templates.GetRedisServiceTemplate(
 		logicalDatabaseName,
 		adminService.namespace, adminService.partOf, adminService.managedBy)
 
-	objectsToCreate = append(objectsToCreate, objectToCreate{redisService, redisService.ObjectMeta})
+	objectsToCreate = append(objectsToCreate, objectToCreate{redisService, &redisService.ObjectMeta})
 
 	envs := common.GetRedisEnvs(adminService.tls.TLS)
 	envs = append(envs, envVarForRedisInstance)
@@ -400,7 +404,7 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 		adminService.managedBy,
 	)
 
-	objectsToCreate = append(objectsToCreate, objectToCreate{redisDeployment, redisDeployment.ObjectMeta})
+	objectsToCreate = append(objectsToCreate, objectToCreate{redisDeployment, &redisDeployment.ObjectMeta})
 
 	var createAndCheckErr error
 
@@ -415,7 +419,18 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 	}()
 
 	for _, objectToCreate := range objectsToCreate {
-		createAndCheckErr = core.CreateOrUpdateRuntimeObject(adminService.kubeClient, nil, nil, objectToCreate.object, objectToCreate.meta, true)
+		if adminService.owner != nil && adminService.runtimeScheme != nil {
+			if err := controllerutil.SetControllerReference(adminService.owner, objectToCreate.object, adminService.runtimeScheme); err != nil {
+				return "", nil, err
+			}
+		}
+
+		meta := metav1.ObjectMeta{}
+		if objectToCreate.meta != nil {
+			meta = *objectToCreate.meta
+		}
+
+		createAndCheckErr = core.CreateOrUpdateRuntimeObject(adminService.kubeClient, nil, nil, objectToCreate.object, meta, true)
 		if createAndCheckErr != nil {
 			return "", nil, createAndCheckErr
 		}
