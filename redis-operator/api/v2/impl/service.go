@@ -44,7 +44,7 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 	// TODO: Force key change based on deploy type?
 	defaultUtilsHelper := &core.DefaultKubernetesHelperImpl{
 		ForceKey: true,
-		OwnerKey: false,
+		OwnerKey: true,
 		Client:   kubeClient, //TODO we get client from ctx and set it to ctx
 	}
 	ctx.Set(constants.KubernetesHelperImpl, defaultUtilsHelper)
