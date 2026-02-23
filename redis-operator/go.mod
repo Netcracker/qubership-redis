@@ -1,13 +1,13 @@
 module github.com/Netcracker/qubership-redis/redis-operator
 
-go 1.25.3
+go 1.25.7
 
 require (
 	github.com/Netcracker/qubership-dbaas-adapter-core v0.11.0
 	github.com/Netcracker/qubership-nosqldb-operator-core v1.0.8
 	github.com/cert-manager/cert-manager v1.15.3
 	github.com/go-redis/redis v6.15.9+incompatible
-	github.com/gofiber/fiber/v2 v2.52.9
+	github.com/gofiber/fiber/v2 v2.52.11
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/zap v1.27.0

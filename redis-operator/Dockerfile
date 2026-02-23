@@ -1,4 +1,4 @@
-FROM golang:1.25.3-alpine AS builder
+FROM golang:1.25.7-alpine AS builder
 ARG GOPROXY=https://proxy.golang.org,direct
 ENV CGO_ENABLED=0
 WORKDIR /src
@@ -33,6 +33,7 @@ COPY --from=builder /src/charts/helm/redis-operator/ helm-templates/redis-operat
 COPY build/bin /usr/local/bin
 
 RUN apk update \
+    && apk upgrade --no-cache \
     && apk add --no-cache curl \
     && rm -rf /var/cache/apk/*
 
