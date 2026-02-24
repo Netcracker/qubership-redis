@@ -42,3 +42,4 @@ ENTRYPOINT /bin/monitoring-watcher
 
 #ENTRYPOINT ["/sbin/tini", "--"]
 #CMD ["telegraf"]
+
