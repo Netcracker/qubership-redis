@@ -1,4 +1,4 @@
-FROM golang:1.25.3-alpine AS builder
+FROM golang:1.25.7-alpine AS builder
 ARG GOPROXY=https://proxy.golang.org,direct
 ENV CGO_ENABLED=0
 WORKDIR /src
@@ -17,7 +17,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
       -ldflags "-s -w" \
       ./main.go
 
-FROM alpine:3.22.2
+FROM alpine:3.23.3
 
 ENV WORKDIR=/opt/operator/ \
     OPERATOR=/usr/local/bin/dbaas-redis-operator \
@@ -33,6 +33,7 @@ COPY --from=builder /src/charts/helm/redis-operator/ helm-templates/redis-operat
 COPY build/bin /usr/local/bin
 
 RUN apk update \
+    && apk upgrade --no-cache \
     && apk add --no-cache curl \
     && rm -rf /var/cache/apk/*
 
