@@ -1,0 +1,339 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Redis Operator Helm Chart Values",
+  "additionalProperties": true,
+  "description": "Schema for validating redis-operator chart values.yaml",
+  "definitions": {
+    "booleanOrString": {
+      "description": "Allows both boolean and string (true/false/yes/no) for boolean-like values",
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "enum": ["true", "false", "yes", "no"] }
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "oneOf": [
+            { "type": "integer" },
+            { "type": "string" }
+          ]
+        },
+        "memory": {
+          "oneOf": [
+            { "type": "integer" },
+            { "type": "string" }
+          ]
+        }
+      }
+    }
+  },
+  "properties": {
+    "DEPLOY_W_HELM": { "$ref": "#/definitions/booleanOrString" },
+    "global": {
+      "type": "object",
+      "description": "Global configuration",
+      "properties": {
+        "profile": {
+          "type": "string",
+          "description": "Resource profile for Redis. Possible values: small, medium, large",
+          "enum": ["", "small", "medium", "large"]
+        }
+      }
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the DbaasRedisAdapter resource",
+      "default": "dbaas-redis-service"
+    },
+    "waitTimeout": {
+      "oneOf": [
+        { "type": "integer" },
+        { "type": "string" }
+      ],
+      "description": "Timeout in seconds for waiting for pods to be ready",
+      "default": 200
+    },
+    "serviceAccountName": {
+      "type": "string",
+      "description": "Service account name for the operator",
+      "default": "dbaas-redis-operator"
+    },
+    "securityContext": {
+      "type": "object",
+      "properties": {
+        "fsGroup": {
+          "oneOf": [
+            { "type": "integer" },
+            { "type": "string" }
+          ]
+        },
+        "runAsUser": {
+          "oneOf": [
+            { "type": "integer" },
+            { "type": "string" }
+          ]
+        },
+        "supplementalGroups": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "type": "integer" },
+                  { "type": "string" }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "imagePullPolicy": {
+      "type": "string",
+      "enum": ["Always", "IfNotPresent", "Never"]
+    },
+    "DEPLOYMENT_SESSION_ID": { "type": "string" },
+    "operator": {
+      "type": "object",
+      "properties": {
+        "dockerImage": { "type": "string" },
+        "initImage": { "type": "string" },
+        "priorityClassName": { "type": "string" },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": { "$ref": "#/definitions/resources" },
+            "limits": { "$ref": "#/definitions/resources" }
+          }
+        }
+      }
+    },
+    "dbaas": {
+      "type": "object",
+      "properties": {
+        "install": { "$ref": "#/definitions/booleanOrString" },
+        "createIngress": { "$ref": "#/definitions/booleanOrString" },
+        "adapter": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string" },
+            "password": { "type": "string" },
+            "secretName": { "type": "string" },
+            "apiVersion": { "type": "string" },
+            "createDBTimeout": { "oneOf": [{ "type": "integer" }, { "type": "string" }] }
+          }
+        },
+        "aggregator": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string" },
+            "password": { "type": "string" },
+            "secretName": { "type": "string" },
+            "address": { "type": "string" },
+            "physicalDatabaseIdentifier": { "type": "string" },
+            "physicalDatabaseLabels": { "oneOf": [{ "type": "object" }, { "type": "null" }] },
+            "dbaasAggregatorRegistrationAddress": { "type": "string" }
+          }
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "dbaasAdapterCASecretName": { "type": "string" },
+            "duration": { "oneOf": [{ "type": "integer" }, { "type": "string" }] },
+            "subjectAlternativeName": {
+              "type": "object",
+              "properties": {
+                "additionalDnsNames": { "type": "array", "items": { "type": "string" } },
+                "additionalIpAddresses": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "redis": {
+      "type": "object",
+      "properties": {
+        "tls": {
+          "type": "object",
+          "properties": {
+            "enabled": { "$ref": "#/definitions/booleanOrString" },
+            "tlsPort": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
+            "nonTlsPort": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
+            "certificateSecretName": { "type": "string" },
+            "rootCAFileName": { "type": "string" },
+            "privateKeyFileName": { "type": "string" },
+            "signedCRTFileName": { "type": "string" },
+            "generateCerts": {
+              "type": "object",
+              "properties": {
+                "enabled": { "$ref": "#/definitions/booleanOrString" },
+                "clusterIssuerName": { "type": "string" },
+                "duration": { "oneOf": [{ "type": "integer" }, { "type": "string" }] }
+              }
+            }
+          }
+        },
+        "password": { "type": "string" },
+        "secretName": { "type": "string" },
+        "dockerImage": { "type": "string" },
+        "priorityClassName": { "type": "string" },
+        "nodeLabels": { "oneOf": [{ "type": "object" }, { "type": "null" }] },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "label": { "type": "string" }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": { "$ref": "#/definitions/resources" },
+            "limits": { "$ref": "#/definitions/resources" }
+          }
+        },
+        "conf": { "type": "object" }
+      }
+    },
+    "monitoringAgent": {
+      "type": "object",
+      "properties": {
+        "install": { "$ref": "#/definitions/booleanOrString" },
+        "dockerImage": { "type": "string" },
+        "priorityClassName": { "type": "string" },
+        "nodeLabels": { "oneOf": [{ "type": "object" }, { "type": "null" }] },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": { "$ref": "#/definitions/resources" },
+            "limits": { "$ref": "#/definitions/resources" }
+          }
+        },
+        "metricCollector": { "type": "string" },
+        "monitoringInterval": { "type": "string" },
+        "influxDB": {
+          "type": "object",
+          "properties": {
+            "host": { "type": "string" },
+            "database": { "type": "string" },
+            "retentionPolicy": { "type": "string" },
+            "user": { "type": "string" },
+            "password": { "type": "string" },
+            "secretName": { "type": "string" }
+          }
+        },
+        "prometheus": {
+          "type": "object",
+          "properties": {
+            "alerts": {
+              "type": "object",
+              "properties": {
+                "cpuThreshold": { "oneOf": [{ "type": "integer" }, { "type": "string" }] },
+                "memThreshold": { "oneOf": [{ "type": "integer" }, { "type": "string" }] },
+                "latencyThresholdMs": { "oneOf": [{ "type": "integer" }, { "type": "string" }] },
+                "connectionsThreshold": { "oneOf": [{ "type": "integer" }, { "type": "string" }] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "disasterRecovery": {
+      "type": "object",
+      "properties": {
+        "enabled": { "$ref": "#/definitions/booleanOrString" },
+        "replicatorNamespace": { "type": "string" }
+      }
+    },
+    "robotTests": {
+      "type": "object",
+      "properties": {
+        "install": { "$ref": "#/definitions/booleanOrString" },
+        "dockerImage": { "type": "string" },
+        "priorityClassName": { "type": "string" },
+        "tags": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "nodeLabels": { "oneOf": [{ "type": "object" }, { "type": "null" }] },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": { "$ref": "#/definitions/resources" },
+            "limits": { "$ref": "#/definitions/resources" }
+          }
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "properties": {
+        "create": { "$ref": "#/definitions/booleanOrString" }
+      }
+    },
+    "roleBinding": {
+      "type": "object",
+      "properties": {
+        "create": { "$ref": "#/definitions/booleanOrString" }
+      }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": { "$ref": "#/definitions/booleanOrString" },
+        "name": { "type": "string" }
+      }
+    },
+    "crd": {
+      "type": "object",
+      "properties": {
+        "create": { "$ref": "#/definitions/booleanOrString" }
+      }
+    },
+    "policies": {
+      "type": "object",
+      "properties": {
+        "tolerations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": { "type": "string" },
+              "operator": { "type": "string" },
+              "value": { "type": "string" },
+              "effect": { "type": "string" },
+              "tolerationSeconds": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "SERVICE_NAME": { "type": "string" },
+    "PART_OF": { "type": "string" },
+    "DELIMITER": { "type": "string" },
+    "ARTIFACT_DESCRIPTOR_VERSION": { "type": "string" },
+    "MANAGED_BY": { "type": "string" },
+    "DEPLOYMENT_RESOURCE_NAME": { "type": "string" },
+    "NAMESPACE": { "type": "string" },
+    "API_DBAAS_ADDRESS": { "type": "string" },
+    "DBAAS_ENABLED": { "type": "string" },
+    "MONITORING_ENABLED": { "type": "string" },
+    "REDIS_PROFILE": { "type": "string" },
+    "CLOUD_PUBLIC_HOST": { "type": "string" },
+    "PAAS_PLATFORM": { "type": "string" },
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" },
+    "createIngress": { "$ref": "#/definitions/booleanOrString" }
+  }
+}
