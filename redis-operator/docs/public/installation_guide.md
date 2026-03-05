@@ -189,6 +189,10 @@ The list of DBaaS Redis Adapter parameters is as follows:
 | Parameter                                             | Mandatory | Type   | Default                            | Description                                                                              |
 |-------------------------------------------------------|-----------|--------|------------------------------------|------------------------------------------------------------------------------------------|
 | `dbaas.install`                                       | false     | bool   | true                               | If the DBaaS adapter needs to be installed.                                              |
+| `dbaas.createIngress`                                 | false     | bool   | false                              | Creates DBaaS adapter ingress resources. Requires `CLOUD_PUBLIC_HOST`.                   |
+| `dbaas.gatewayApi.gatewayName`                        | false     | string | default-external-gateway           | Chart default for Gateway name.                   |
+| `dbaas.gatewayApi.gatewayNamespace`                   | false     | string | gateway-system                     | Chart default for Gateway namespace.            |
+| `dbaas.gatewayApi.gatewaySectionName`                 | false     | string | ""                                 | Optional Gateway listener name.                                                          |
 | `dbaas.aggregator.physicalDatabaseIdentifier`         | false     | string | redis                              | The database identifier in the DBaaS aggregator.                                         |
 | `dbaas.aggregator.physicalDatabaseLabels`             | false     | string | ""                                 | The database labels in the DBaaS aggregator.                                             |
 | `dbaas.aggregator.dbaasAggregatorRegistrationAddress` | false     | string | http://dbaas-aggregator.dbaas:8080 | The address of the DBaaS aggregator.                                                     |

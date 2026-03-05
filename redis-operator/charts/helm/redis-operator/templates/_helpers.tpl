@@ -297,6 +297,24 @@ Uses value from values.yaml if defined, otherwise value from environment variabl
   {{- end -}}
 {{- end -}}
 
+{{/* Gateway name for HTTPRoute parentRefs. */}}
+{{- define "redis.gatewayApiName" -}}
+  {{- if and (ne (.Values.GATEWAY_SYSTEM_NAME | toString) "<nil>") (ne (.Values.GATEWAY_SYSTEM_NAME | toString) "") .Values.global.cloudIntegrationEnabled -}}
+    {{- .Values.GATEWAY_SYSTEM_NAME | toString -}}
+  {{- else -}}
+    {{- .Values.GatewayAPI.gatewayName -}}
+  {{- end -}}
+{{- end -}}
+
+{{/* Gateway namespace for HTTPRoute parentRefs. */}}
+{{- define "redis.gatewayApiNamespace" -}}
+  {{- if and (ne (.Values.GATEWAY_SYSTEM_NAMESPACE | toString) "<nil>") (ne (.Values.GATEWAY_SYSTEM_NAMESPACE | toString) "") .Values.global.cloudIntegrationEnabled -}}
+    {{- .Values.GATEWAY_SYSTEM_NAMESPACE | toString -}}
+  {{- else -}}
+    {{- .Values.GatewayAPI.gatewayNamespace -}}
+  {{- end -}}
+{{- end -}}
+
 {{/*
 Common redis resources labels
 */}}

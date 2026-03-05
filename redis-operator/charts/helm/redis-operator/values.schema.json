@@ -40,6 +40,10 @@
           "type": "string",
           "description": "Resource profile for Redis. Possible values: small, medium, large",
           "enum": ["", "small", "medium", "large"]
+        },
+        "cloudIntegrationEnabled": {
+          "$ref": "#/definitions/booleanOrString",
+          "description": "Enables integration with Cloud/Infra Passport values."
         }
       }
     },
@@ -116,7 +120,20 @@
       "type": "object",
       "properties": {
         "install": { "$ref": "#/definitions/booleanOrString" },
-        "createIngress": { "$ref": "#/definitions/booleanOrString" },
+        "createIngress": {
+          "$ref": "#/definitions/booleanOrString",
+          "description": "Creates DBaaS adapter ingress resources. Requires CLOUD_PUBLIC_HOST."
+        },
+        "gatewayApi": {
+          "type": "object",
+          "properties": {
+            "gatewaySectionName": {
+              "type": "string",
+              "description": "Optional Gateway listener name.",
+              "default": ""
+            }
+          }
+        },
         "adapter": {
           "type": "object",
           "properties": {
@@ -331,9 +348,17 @@
     "MONITORING_ENABLED": { "$ref": "#/definitions/booleanOrString" },
     "REDIS_PROFILE": { "type": "string" },
     "CLOUD_PUBLIC_HOST": { "type": "string" },
+    "GATEWAY_SYSTEM_NAME": { "type": "string" },
+    "GATEWAY_SYSTEM_NAMESPACE": { "type": "string" },
+    "GatewayAPI": {
+      "type": "object",
+      "properties": {
+        "gatewayName": { "type": "string", "default": "default-external-gateway" },
+        "gatewayNamespace": { "type": "string", "default": "gateway-system" }
+      }
+    },
     "PAAS_PLATFORM": { "type": "string" },
     "nameOverride": { "type": "string" },
-    "fullnameOverride": { "type": "string" },
-    "createIngress": { "$ref": "#/definitions/booleanOrString" }
+    "fullnameOverride": { "type": "string" }
   }
 }
