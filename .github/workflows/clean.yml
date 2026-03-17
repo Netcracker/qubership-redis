@@ -22,6 +22,12 @@ jobs:
           - name: qubership-redis-transfer
             file: docker-transfer/Dockerfile
             context: ""
+          - name: qubership-docker-redis-7
+            file: docker-redis/7/Dockerfile
+            context: docker-redis/7
+          - name: qubership-docker-redis-8
+            file: docker-redis/8/Dockerfile
+            context: docker-redis/8
     if: github.event.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:

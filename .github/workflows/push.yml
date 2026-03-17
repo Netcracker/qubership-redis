@@ -38,6 +38,12 @@ jobs:
           - name: qubership-redis-transfer
             file: docker-transfer/Dockerfile
             context: ""
+          - name: qubership-docker-redis-7
+            file: docker-redis/7/Dockerfile
+            context: docker-redis/7
+          - name: qubership-docker-redis-8
+            file: docker-redis/8/Dockerfile
+            context: docker-redis/8
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -56,14 +62,6 @@ jobs:
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV
       - name: Prepare Group
         run: echo "GITHUB_GROUP=${GITHUB_GROUP,,}" >> $GITHUB_ENV
-      - name: Get package IDs for delete
-        id: get-ids-for-delete
-        uses: Netcracker/get-package-ids@v0.0.1
-        with:
-          component-name: ${{ matrix.component.name }}
-          component-tag: ${{ env.TAG_NAME }}
-          access-token: ${{secrets.GITHUB_TOKEN}}
-        if: ${{ env.PUSH }}
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -74,9 +72,3 @@ jobs:
           push: ${{ env.PUSH }}
           tags: ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ env.TAG_NAME }}
           provenance: false
-      - uses: actions/delete-package-versions@v5
-        with:
-          package-name: ${{ matrix.component.name }}
-          package-type: 'container'
-          package-version-ids: ${{ steps.get-ids-for-delete.outputs.ids-for-delete }}
-        if: ${{ steps.get-ids-for-delete.outputs.ids-for-delete != '' }}
