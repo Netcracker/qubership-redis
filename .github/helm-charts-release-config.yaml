@@ -9,3 +9,5 @@ charts:
       - ghcr.io/netcracker/qubership-redis-monitoring-agent:${release}
       - ghcr.io/netcracker/qubership-redis-tests:${release}
       - ghcr.io/netcracker/qubership-redis-transfer:${release}
+      - ghcr.io/netcracker/qubership-docker-redis-7:${release}
+      - ghcr.io/netcracker/qubership-docker-redis-8:${release}
