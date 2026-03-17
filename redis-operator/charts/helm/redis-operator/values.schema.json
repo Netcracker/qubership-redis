@@ -127,11 +127,9 @@
         "gatewayApi": {
           "type": "object",
           "properties": {
-            "gatewaySectionName": {
-              "type": "string",
-              "description": "Optional Gateway listener name.",
-              "default": ""
-            }
+            "gatewayName": { "type": "string", "default": "default-external-gateway" },
+            "gatewayNamespace": { "type": "string", "default": "gateway-system" },
+            "gatewaySectionName": { "type": "string", "default": "" }
           }
         },
         "adapter": {
@@ -348,17 +346,9 @@
     "MONITORING_ENABLED": { "$ref": "#/definitions/booleanOrString" },
     "REDIS_PROFILE": { "type": "string" },
     "CLOUD_PUBLIC_HOST": { "type": "string" },
-    "GATEWAY_SYSTEM_NAME": { "type": "string" },
-    "GATEWAY_SYSTEM_NAMESPACE": { "type": "string" },
-    "GatewayAPI": {
-      "type": "object",
-      "properties": {
-        "gatewayName": { "type": "string", "default": "default-external-gateway" },
-        "gatewayNamespace": { "type": "string", "default": "gateway-system" }
-      }
-    },
     "PAAS_PLATFORM": { "type": "string" },
     "nameOverride": { "type": "string" },
-    "fullnameOverride": { "type": "string" }
+    "fullnameOverride": { "type": "string" },
+    "createIngress": { "$ref": "#/definitions/booleanOrString" }
   }
 }

@@ -302,7 +302,7 @@ Uses value from values.yaml if defined, otherwise value from environment variabl
   {{- if and (ne (.Values.GATEWAY_SYSTEM_NAME | toString) "<nil>") (ne (.Values.GATEWAY_SYSTEM_NAME | toString) "") .Values.global.cloudIntegrationEnabled -}}
     {{- .Values.GATEWAY_SYSTEM_NAME | toString -}}
   {{- else -}}
-    {{- .Values.GatewayAPI.gatewayName -}}
+    {{- .Values.dbaas.gatewayApi.gatewayName -}}
   {{- end -}}
 {{- end -}}
 
@@ -311,7 +311,7 @@ Uses value from values.yaml if defined, otherwise value from environment variabl
   {{- if and (ne (.Values.GATEWAY_SYSTEM_NAMESPACE | toString) "<nil>") (ne (.Values.GATEWAY_SYSTEM_NAMESPACE | toString) "") .Values.global.cloudIntegrationEnabled -}}
     {{- .Values.GATEWAY_SYSTEM_NAMESPACE | toString -}}
   {{- else -}}
-    {{- .Values.GatewayAPI.gatewayNamespace -}}
+    {{- .Values.dbaas.gatewayApi.gatewayNamespace -}}
   {{- end -}}
 {{- end -}}
 
