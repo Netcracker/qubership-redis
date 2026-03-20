@@ -31,7 +31,7 @@ global:
 
 DEPLOYMENT_SESSION_ID: "default-session-id"
 operator:
-  dockerImage: ghcr.io/netcracker/qubership-redis-operator:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-operator:4.1.0
   initImage: to_replace
   priorityClassName: ""
   resources:
@@ -157,7 +157,7 @@ redis:
 
 monitoringAgent:
   install: true
-  dockerImage: ghcr.io/netcracker/qubership-redis-monitoring-agent:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-monitoring-agent:4.1.0
   priorityClassName: ""
   nodeLabels:
   resources:
@@ -190,7 +190,7 @@ disasterRecovery:
 
 robotTests:
   install: false
-  dockerImage: ghcr.io/netcracker/qubership-redis-tests:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-tests:4.1.0
   priorityClassName: ""
   tags:
   nodeLabels:
