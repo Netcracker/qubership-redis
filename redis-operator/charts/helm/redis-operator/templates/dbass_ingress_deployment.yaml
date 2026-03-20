@@ -1,7 +1,9 @@
-{{- if and .Values.createIngress (include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.dbaas.install "envVar" .Values.DBAAS_ENABLED "default" true )) .Values.CLOUD_PUBLIC_HOST }}
+{{- if and .Values.dbaas.createIngress (include "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.dbaas.install "envVar" .Values.DBAAS_ENABLED "default" true )) .Values.CLOUD_PUBLIC_HOST }}
 apiVersion: {{ if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}"networking.k8s.io/v1"{{ else }}"networking.k8s.io/v1beta1"{{ end }}
 kind: Ingress
 metadata:
+  annotations:
+    gateway-api-converter.netcracker.com/ignore: "true"
   labels:
     {{- include "redis.defaultLabels" . | nindent 4 }}
   name: {{ printf "%s-dbaas-adapter-swagger" .Release.Namespace }}

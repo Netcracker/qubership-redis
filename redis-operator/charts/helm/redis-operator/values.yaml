@@ -26,6 +26,9 @@ securityContext:
 
 imagePullPolicy: Always
 
+global:
+  cloudIntegrationEnabled: true
+
 DEPLOYMENT_SESSION_ID: "default-session-id"
 operator:
   dockerImage: ghcr.io/netcracker/qubership-redis-operator:main
@@ -42,6 +45,10 @@ operator:
 dbaas:
   install: true
   createIngress: false
+  gatewayApi:
+    gatewayName: "default-external-gateway"
+    gatewayNamespace: "gateway-system"
+    gatewaySectionName: ""    # Optional Gateway listener name
   adapter:
     username: dbaas-aggregator
     password: dbaas-aggregator

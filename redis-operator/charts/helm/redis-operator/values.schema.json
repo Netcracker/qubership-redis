@@ -40,6 +40,10 @@
           "type": "string",
           "description": "Resource profile for Redis. Possible values: small, medium, large",
           "enum": ["", "small", "medium", "large"]
+        },
+        "cloudIntegrationEnabled": {
+          "$ref": "#/definitions/booleanOrString",
+          "description": "Enables integration with Cloud/Infra Passport values."
         }
       }
     },
@@ -116,7 +120,18 @@
       "type": "object",
       "properties": {
         "install": { "$ref": "#/definitions/booleanOrString" },
-        "createIngress": { "$ref": "#/definitions/booleanOrString" },
+        "createIngress": {
+          "$ref": "#/definitions/booleanOrString",
+          "description": "Creates DBaaS adapter ingress resources. Requires CLOUD_PUBLIC_HOST."
+        },
+        "gatewayApi": {
+          "type": "object",
+          "properties": {
+            "gatewayName": { "type": "string", "default": "default-external-gateway" },
+            "gatewayNamespace": { "type": "string", "default": "gateway-system" },
+            "gatewaySectionName": { "type": "string", "default": "" }
+          }
+        },
         "adapter": {
           "type": "object",
           "properties": {
