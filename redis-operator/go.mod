@@ -1,6 +1,6 @@
 module github.com/Netcracker/qubership-redis/redis-operator
 
-go 1.25.7
+go 1.26.1
 
 require (
 	github.com/Netcracker/qubership-dbaas-adapter-core v0.11.1
