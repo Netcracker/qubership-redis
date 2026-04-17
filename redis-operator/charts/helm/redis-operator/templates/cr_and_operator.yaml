@@ -42,8 +42,6 @@ spec:
   {{- end }}
 
   securityContext:
-    fsGroup: {{ .Values.securityContext.fsGroup }}
-    runAsUser: {{ .Values.securityContext.runAsUser }}
     {{- if .Values.securityContext.supplementalGroups }}
     supplementalGroups:
       {{- range $key, $value := .Values.securityContext.supplementalGroups }}
@@ -53,6 +51,8 @@ spec:
     runAsNonRoot: true
     {{- $platform := .Values.PAAS_PLATFORM | default "KUBERNETES" -}}
     {{- if ne $platform "OPENSHIFT" }}
+    fsGroup: {{ .Values.securityContext.fsGroup }}
+    runAsUser: {{ .Values.securityContext.runAsUser }}
     seccompProfile:
       type: RuntimeDefault
     {{- end }}
