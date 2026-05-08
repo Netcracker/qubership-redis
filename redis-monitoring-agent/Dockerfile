@@ -15,7 +15,7 @@ RUN mkdir -p bin \
        -gcflags "all=-trimpath=${GOPATH}" \
        -asmflags "all=-trimpath=${GOPATH}"
 
-FROM redis:7.4.7-alpine AS redis
+FROM redis:7.4.9-alpine AS redis
 FROM telegraf:1.37.3-alpine
 
 USER root
