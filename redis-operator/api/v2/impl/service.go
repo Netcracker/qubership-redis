@@ -65,7 +65,7 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 			dcs := &v1.DeploymentList{}
 			opts := []client.ListOption{
 				client.InNamespace(request.Namespace),
-				client.MatchingLabelsSelector{labels.SelectorFromSet(map[string]string{spec.Spec.Redis.Label: spec.Spec.Redis.Label})},
+				client.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{spec.Spec.Redis.Label: spec.Spec.Redis.Label})},
 			}
 
 			errList := kubeClient.List(context.TODO(), dcs, opts...)

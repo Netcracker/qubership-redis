@@ -332,7 +332,7 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 	//check if deployment already exists
 	lo := []client.ListOption{
 		client.InNamespace(adminService.namespace),
-		client.MatchingLabelsSelector{labels.SelectorFromSet(map[string]string{constants.Name: logicalDatabaseName})},
+		client.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{constants.Name: logicalDatabaseName})},
 	}
 
 	redisDL, dErr := adminService.listRedisDeployments(lo)
@@ -530,7 +530,7 @@ func (adminService *AdministrationService) GetDatabases(ctx context.Context) []s
 	logger := utils.AddLoggerContext(adminService.logger, ctx)
 	lo := []client.ListOption{
 		client.InNamespace(adminService.namespace),
-		client.MatchingLabelsSelector{labels.SelectorFromSet(map[string]string{adminService.redisLabel: adminService.redisLabel})},
+		client.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{adminService.redisLabel: adminService.redisLabel})},
 	}
 
 	var result []string

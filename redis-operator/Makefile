@@ -90,8 +90,9 @@ help: ## Display this help.
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=charts/helm/redis-operator/crds
 	mv charts/helm/redis-operator/crds/netcracker.com_dbaasredisadapters.yaml charts/helm/redis-operator/crds/k8s_1.22_crd.yaml
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:crdVersions=v1beta1,maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=charts/helm/redis-operator/legacy_crd
-	mv charts/helm/redis-operator/legacy_crd/netcracker.com_dbaasredisadapters.yaml charts/helm/redis-operator/legacy_crd/crd.yaml
+	
+	#$(CONTROLLER_GEN) rbac:roleName=manager-role crd:crdVersions=v1beta1,maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=charts/helm/redis-operator/legacy_crd
+	#mv charts/helm/redis-operator/legacy_crd/netcracker.com_dbaasredisadapters.yaml charts/helm/redis-operator/legacy_crd/crd.yaml
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -107,7 +108,7 @@ vet: ## Run go vet against code.
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out`,
+	NAMESPACE=test KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
 ##@ Build
 

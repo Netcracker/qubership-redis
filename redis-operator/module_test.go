@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
@@ -348,7 +347,7 @@ func Test_FullFeaturedConfigV2(t *testing.T) {
 	redisClient.On("Set", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	redisClient.On("Addr").Return("")
 	redisClient.On("Close").Return(nil)
-	dbAdmin := adapter.PrepareAdminService(spec, redisClient, fake.NewFakeClient(GetRuntimeObjects(nameSpace)...), &runtime.Scheme{}, logger, nil, nameSpace, apiVersion)
+	dbAdmin := adapter.PrepareAdminService(spec, redisClient, fake.NewFakeClient(GetRuntimeObjects(nameSpace)...), &runtime.Scheme{}, logger, nameSpace, apiVersion)
 
 	appCredentials := coreTest.AppCredentials{
 		AppName:           coreTest.Simplstr(),
@@ -365,7 +364,7 @@ func Test_FullFeaturedConfigV2(t *testing.T) {
 	defer aggregatorServer.Close()
 	aggAddress := aggregatorServer.URL
 
-	dbaasClient, err := dbaas.NewDbaasClient(aggAddress, &dao.BasicAuth{appCredentials.AggregatorApiUser, appCredentials.AggregatorApiPass}, nil)
+	dbaasClient, err := dbaas.NewDbaasClient(aggAddress, &dao.BasicAuth{Username: appCredentials.AggregatorApiUser, Password: appCredentials.AggregatorApiPass}, nil)
 	if err != nil {
 		assert.Fail(t, "Failed to create Dbaas Client", err)
 	}
