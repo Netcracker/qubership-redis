@@ -159,6 +159,7 @@ func (s *RedisReconciler) GetStatus() *types.ServiceStatusCondition {
 
 func (s *RedisReconciler) UpdateStatus(condition types.ServiceStatusCondition) {
 	s.Instance.Status.Conditions = []types.ServiceStatusCondition{condition}
+	s.Instance.Status.ObservedGeneration = s.Instance.Generation
 }
 
 func (s *RedisReconciler) GetSpec() interface{} {
