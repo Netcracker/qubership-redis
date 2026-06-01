@@ -86,9 +86,6 @@ jobs:
           push: ${{ env.PUSH && (!matrix.component.main_only || github.ref == 'refs/heads/main' || github.event_name == 'release') }}
           tags: ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ env.TAG_NAME }}
           provenance: false
-          labels: |
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.source=${{ github.repositoryUrl }}
       - uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ matrix.component.name }}
