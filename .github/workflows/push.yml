@@ -45,9 +45,11 @@ jobs:
           - name: qubership-docker-redis-7
             file: docker-redis/7/Dockerfile
             context: docker-redis/7
+            main_only: true
           - name: qubership-docker-redis-8
             file: docker-redis/8/Dockerfile
             context: docker-redis/8
+            main_only: true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -81,9 +83,12 @@ jobs:
           context: ${{ matrix.component.context }}
           file: ${{ matrix.component.file }}
           platforms: linux/amd64
-          push: ${{ env.PUSH }}
+          push: ${{ env.PUSH && (!matrix.component.main_only || github.ref == 'refs/heads/main' || github.event_name == 'release') }}
           tags: ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ env.TAG_NAME }}
           provenance: false
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
       - uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ matrix.component.name }}
