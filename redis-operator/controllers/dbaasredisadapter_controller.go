@@ -55,7 +55,22 @@ type DbaasRedisAdapterReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.1/pkg/reconcile
 func (r *DbaasRedisAdapterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
+
+	instance := &netcrackercomv2.DbaasRedisAdapter{}
+	if err := r.Get(ctx, req.NamespacedName, instance); err == nil {
+		// Mark reconcile in progress before shared library runs.
+		// Ensures ArgoCD sees observedGeneration < generation (Progressing) during reconcile,
+		// instead of the stale Successful status left by a previous operator version that never
+		// wrote observedGeneration.
+		if instance.Status.ObservedGeneration < instance.Generation-1 {
+			patch := client.MergeFrom(instance.DeepCopy())
+			instance.Status.ObservedGeneration = instance.Generation - 1
+			if patchErr := r.Status().Patch(ctx, instance, patch); patchErr != nil {
+				logger.Error(patchErr, "failed to patch observedGeneration at reconcile start")
+			}
+		}
+	}
 
 	return r.Reconciler.Reconcile(ctx, req)
 }
