@@ -24,7 +24,8 @@ import (
 
 // DbaasRedisAdapterStatus defines the observed state of DbaasRedisAdapter
 type DbaasRedisAdapterStatus struct {
-	Conditions []types.ServiceStatusCondition `json:"conditions,omitempty"`
+	Conditions         []types.ServiceStatusCondition `json:"conditions,omitempty"`
+	ObservedGeneration int64                          `json:"observedGeneration,omitempty"`
 }
 
 //+kubebuilder:object:root=true
