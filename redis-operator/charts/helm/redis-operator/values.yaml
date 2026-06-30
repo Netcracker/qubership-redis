@@ -7,6 +7,7 @@ DEPLOY_W_HELM: true
 name: dbaas-redis-service
 global:
   profile: ""
+  cloudIntegrationEnabled: true
 
 waitTimeout: 200
 serviceAccountName: dbaas-redis-operator
@@ -25,9 +26,6 @@ securityContext:
   supplementalGroups:
 
 imagePullPolicy: Always
-
-global:
-  cloudIntegrationEnabled: true
 
 DEPLOYMENT_SESSION_ID: "default-session-id"
 operator:

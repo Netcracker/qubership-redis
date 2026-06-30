@@ -237,9 +237,9 @@ Dictionary with:
 
 
 {{- define "getResourcesForProfile" -}}
-  {{- $flavor := .dotVar }}
+  {{- $flavor := default "" .dotVar | toString }}
 {{- if and (ne (.envVar | toString) "<nil>") (ne (.envVar | toString) "") -}}
-  {{- $flavor = .envVar -}}
+  {{- $flavor = .envVar | toString -}}
 {{- end -}}
   {{- if eq $flavor "small" -}}
     resources:
