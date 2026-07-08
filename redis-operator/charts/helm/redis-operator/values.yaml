@@ -23,6 +23,7 @@ serviceAccountName: dbaas-redis-operator
 securityContext:
   fsGroup: 1001
   runAsUser: 1001
+  runAsGroup: 1001
   supplementalGroups:
 
 imagePullPolicy: Always

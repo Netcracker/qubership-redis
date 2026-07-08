@@ -3,7 +3,6 @@ package redis
 import (
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
-	utils2 "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
 	netcrackerv1 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl/utils"
 	"github.com/Netcracker/qubership-redis/redis-operator/common"
@@ -95,7 +94,6 @@ func (r *RedisBuilder) Build(ctx core.ExecutionContext) core.Executable {
 			}
 
 			envs := common.GetRedisEnvs(redisSpec.TLS.TLS)
-			envs = append(envs, utils2.GetSecretEnvVar("REDIS_PASSWORD", redisSpec.SecretName, constants.Password))
 			deployment := templates.GetRedisDeploymentTemplate(
 				core2.Redis,
 				request.Namespace,
@@ -111,6 +109,7 @@ func (r *RedisBuilder) Build(ctx core.ExecutionContext) core.Executable {
 				spec.Spec.ImagePullPolicy,
 				spec.Spec.Redis.TLS,
 				spec.Spec.Redis.PriorityClassName, spec.Spec.PartOf, spec.Spec.ManagedBy,
+				redisSpec.SecretName,
 			)
 
 			delErr := helperImpl.DeleteDeploymentAndPods(deployment.Name, request.Namespace, cr.Spec.WaitTimeout)

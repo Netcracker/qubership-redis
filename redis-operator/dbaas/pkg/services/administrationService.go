@@ -18,7 +18,6 @@ import (
 	coreService "github.com/Netcracker/qubership-dbaas-adapter-core/pkg/service"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
-	coreUtils "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
 	v2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/common"
 	customEntity "github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/entity"
@@ -362,8 +361,6 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 		return "", nil, redisEnvCredErr
 	}
 
-	envVarForRedisInstance := coreUtils.GetSecretEnvVar(redisPasswordConst, credsSecretName, constants.Password)
-
 	objectsToCreate = append(objectsToCreate,
 		objectToCreate{secret, &secret.ObjectMeta})
 
@@ -382,7 +379,6 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 	objectsToCreate = append(objectsToCreate, objectToCreate{redisService, &redisService.ObjectMeta})
 
 	envs := common.GetRedisEnvs(adminService.tls.TLS)
-	envs = append(envs, envVarForRedisInstance)
 
 	// The Redis Deployment
 	redisDeployment := templates.GetRedisDeploymentTemplate(
@@ -402,6 +398,7 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 		adminService.priorityClassName,
 		adminService.partOf,
 		adminService.managedBy,
+		credsSecretName,
 	)
 
 	objectsToCreate = append(objectsToCreate, objectToCreate{redisDeployment, &redisDeployment.ObjectMeta})

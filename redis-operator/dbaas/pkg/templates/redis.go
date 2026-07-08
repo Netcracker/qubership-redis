@@ -3,6 +3,7 @@ package templates
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	constants "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	v2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
@@ -10,6 +11,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	v13 "k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -41,7 +43,8 @@ func GetRedisDeploymentTemplate(
 	label string,
 	redisImagePullPolicy v13.PullPolicy,
 	tls v2.TLS,
-	priorityClassName string, partOf, managedBy string) *v1.Deployment {
+	priorityClassName string, partOf, managedBy string,
+	secretName string) *v1.Deployment {
 	var r int32 = 1
 	probe := &v13.Probe{
 		ProbeHandler: v13.ProbeHandler{
@@ -73,6 +76,9 @@ func GetRedisDeploymentTemplate(
 		AppTechnology:  "",
 	}
 
+	tmpSizeLimit := resource.MustParse("100Mi")
+	secretMode := int32(0400)
+
 	volumes := []v13.Volume{
 		{
 			Name: "config",
@@ -98,6 +104,21 @@ func GetRedisDeploymentTemplate(
 				},
 			},
 		},
+		{
+			Name: "tmp",
+			VolumeSource: v13.VolumeSource{
+				EmptyDir: &v13.EmptyDirVolumeSource{SizeLimit: &tmpSizeLimit},
+			},
+		},
+		{
+			Name: "redis-secret",
+			VolumeSource: v13.VolumeSource{
+				Secret: &v13.SecretVolumeSource{
+					SecretName:  secretName,
+					DefaultMode: &secretMode,
+				},
+			},
+		},
 	}
 
 	volumeMounts := []v13.VolumeMount{
@@ -109,20 +130,22 @@ func GetRedisDeploymentTemplate(
 			Name:      name + "-data",
 			MountPath: "/var/lib/redis/data",
 		},
+		{Name: "tmp", MountPath: "/tmp"},
+		{Name: "redis-secret", MountPath: "/var/run/secrets/redis", ReadOnly: true},
 	}
 
 	if tls.Enabled {
-		var secretName string
+		var tlsSecretName string
 		if tls.ClusterIssuerName == "" {
-			secretName = "root-ca"
+			tlsSecretName = "root-ca"
 		} else {
-			secretName = tls.CertificateSecretName
+			tlsSecretName = tls.CertificateSecretName
 		}
 		volProj := []v13.VolumeProjection{
 			v13.VolumeProjection{
 				Secret: &v13.SecretProjection{
 					LocalObjectReference: v13.LocalObjectReference{
-						Name: secretName,
+						Name: tlsSecretName,
 					},
 					Items: []v13.KeyToPath{
 						{
@@ -161,7 +184,14 @@ func GetRedisDeploymentTemplate(
 			fmt.Sprintf("--tls-ca-cert-file %s", fmt.Sprintf("%s/%s", core.CertPath, tls.RootCAFileName)))
 	}
 
+	shellCmd := fmt.Sprintf(
+		"export REDIS_PASSWORD=$(cat /var/run/secrets/redis/%s) && exec redis-server %s",
+		constants.Password,
+		strings.Join(args, " "),
+	)
+
 	allowPrivilegeEscalation := false
+	readOnlyRootFilesystem := true
 
 	return &v1.Deployment{
 		ObjectMeta: v12.ObjectMeta{
@@ -188,12 +218,14 @@ func GetRedisDeploymentTemplate(
 							Name:            name,
 							Image:           image,
 							ImagePullPolicy: redisImagePullPolicy,
-							Args:            args,
+							Command:         []string{"/bin/sh", "-c"},
+							Args:            []string{shellCmd},
 							SecurityContext: &v13.SecurityContext{
 								Capabilities: &v13.Capabilities{
 									Drop: []v13.Capability{"ALL"},
 								},
 								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
 							},
 							Ports: []v13.ContainerPort{
 								v13.ContainerPort{

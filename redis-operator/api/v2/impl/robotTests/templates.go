@@ -15,6 +15,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
@@ -91,10 +92,6 @@ func RobotDeployment(cr *netcrackerv1.DbaasRedisAdapter) *v1.Deployment {
 			Value: "6379",
 		},
 		{
-			Name:  "REDIS_PASSWORD",
-			Value: "redis",
-		},
-		{
 			Name:  "REDIS_DBAAS_ADAPTER_HOST",
 			Value: fmt.Sprintf("%s.%s.svc", adapter.ServiceName, cr.Namespace),
 		},
@@ -122,12 +119,7 @@ func RobotDeployment(cr *netcrackerv1.DbaasRedisAdapter) *v1.Deployment {
 		utils2.GetPlainTextEnvVar("STATUS_WRITING_ENABLED", "true"),
 	}
 
-	if cr.Spec.Dbaas.Install {
-		envs = append(envs,
-			utils2.GetSecretEnvVar("REDIS_DBAAS_USER", cr.Spec.Dbaas.Adapter.SecretName, common.Username),
-			utils2.GetSecretEnvVar("REDIS_DBAAS_PASSWORD", cr.Spec.Dbaas.Adapter.SecretName, common.Password),
-		)
-	}
+	envs = append(envs, corev1.EnvVar{Name: "PYTHONDONTWRITEBYTECODE", Value: "1"})
 
 	var tolerations []corev1.Toleration
 	if cr.Spec.Policies != nil {
@@ -135,7 +127,47 @@ func RobotDeployment(cr *netcrackerv1.DbaasRedisAdapter) *v1.Deployment {
 	}
 
 	allowPrivilegeEscalation := false
+	readOnlyRootFilesystem := true
+	tmpSizeLimit := resource.MustParse("100Mi")
+	outputSizeLimit := resource.MustParse("500Mi")
 	var replicas int32 = 1
+
+	volumes := []corev1.Volume{
+		{
+			Name: "tmp",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{SizeLimit: &tmpSizeLimit},
+			},
+		},
+		{
+			Name: "robot-output",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{SizeLimit: &outputSizeLimit},
+			},
+		},
+	}
+	volumeMounts := []corev1.VolumeMount{
+		{Name: "tmp", MountPath: "/tmp"},
+		{Name: "robot-output", MountPath: "/opt/robot/output"},
+	}
+
+	if cr.Spec.Dbaas.Install {
+		secretMode := int32(0400)
+		volumes = append(volumes, corev1.Volume{
+			Name: "dbaas-adapter-secret",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName:  cr.Spec.Dbaas.Adapter.SecretName,
+					DefaultMode: &secretMode,
+				},
+			},
+		})
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "dbaas-adapter-secret",
+			MountPath: "/var/run/secrets/redis",
+			ReadOnly:  true,
+		})
+	}
 	dc := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceName,
@@ -190,9 +222,12 @@ func RobotDeployment(cr *netcrackerv1.DbaasRedisAdapter) *v1.Deployment {
 									Drop: []corev1.Capability{"ALL"},
 								},
 								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
 							},
+							VolumeMounts: volumeMounts,
 						},
 					},
+					Volumes: volumes,
 				},
 			},
 		},
