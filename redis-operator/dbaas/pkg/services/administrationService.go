@@ -25,6 +25,7 @@ import (
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/redis"
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/templates"
 
+	cm "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/mitchellh/mapstructure"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -69,6 +70,7 @@ var _ coreService.DbAdministration = &AdministrationService{}
 
 var (
 	credsSuffix        = "-credentials"
+	certSuffix         = "-certificate"
 	regexpExpression   = "^[a-z][-a-z0-9]*[a-z0-9]?$"
 	nameRegexp, _      = regexp.Compile(regexpExpression)
 	redisPasswordConst = "REDIS_PASSWORD"
@@ -175,7 +177,7 @@ func (adminService *AdministrationService) getResourcesMapping(serviceName strin
 	if !strings.HasSuffix(serviceName, credsSuffix) {
 		secretOm.Name = credsName(secretOm.Name)
 	}
-	return map[string]DBResourceMapping{
+	mapping := map[string]DBResourceMapping{
 		"Secret": {
 			name: secretOm.Name,
 			object: &v1.Secret{
@@ -201,6 +203,23 @@ func (adminService *AdministrationService) getResourcesMapping(serviceName strin
 			},
 		},
 	}
+	// Certificate mapping only applies when TLS is enabled;
+	if adminService.tls.Enabled {
+		certName := serviceName
+		if !strings.HasSuffix(serviceName, certSuffix) {
+			certName = serviceName + certSuffix
+		}
+		mapping["Certificate"] = DBResourceMapping{
+			name: certName,
+			object: &cm.Certificate{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      certName,
+					Namespace: adminService.namespace,
+				},
+			},
+		}
+	}
+	return mapping
 }
 
 // Precompiled list of resources to reduce amount of get operations
@@ -351,8 +370,14 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 
 	var objectsToCreate []objectToCreate
 
-	certErr := common.UpdateCertificate(adminService.tls.Enabled, adminService.tls.ClusterIssuerName, logicalDatabaseName, adminService.namespace, adminService.kubeClient, adminService.runtimeScheme)
-	core.PanicError(certErr, logger.Error, "Failed to update TLS certificate")
+	// Created via objectsToCreate instead of common.UpdateCertificate so the owner reference below applies to it.
+	if adminService.tls.Enabled {
+		if err := cm.AddToScheme(adminService.runtimeScheme); err != nil {
+			return "", nil, err
+		}
+		certificate := common.GetCertificateTemplate(logicalDatabaseName, adminService.namespace, adminService.tls.ClusterIssuerName).(*cm.Certificate)
+		objectsToCreate = append(objectsToCreate, objectToCreate{certificate, &certificate.ObjectMeta})
+	}
 
 	// Making secret for pass
 	credsSecretName := credsName(logicalDatabaseName)
@@ -552,7 +577,13 @@ func (adminService *AdministrationService) DropResources(ctx context.Context, re
 		resourceKind := resource.Kind
 		resourceName := resource.Name
 
-		obj := adminService.getResourcesMapping(resourceName)[resourceKind]
+		obj, known := adminService.getResourcesMapping(resourceName)[resourceKind]
+		if !known || obj.object == nil {
+			logger.Warn(fmt.Sprintf("Unknown resource kind \"%s\" for \"%s\", skipping deletion", resourceKind, resourceName))
+			resource.Status = dao.DELETED
+			dropStatuses = append(dropStatuses, resource)
+			continue
+		}
 
 		err := core.DeleteRuntimeObject(adminService.kubeClient, obj.object)
 
