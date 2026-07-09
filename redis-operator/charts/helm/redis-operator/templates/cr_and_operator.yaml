@@ -53,6 +53,7 @@ spec:
     {{- if ne $platform "OPENSHIFT" }}
     fsGroup: {{ .Values.securityContext.fsGroup }}
     runAsUser: {{ .Values.securityContext.runAsUser }}
+    runAsGroup: {{ .Values.securityContext.runAsGroup }}
     seccompProfile:
       type: RuntimeDefault
     {{- end }}
@@ -88,7 +89,7 @@ spec:
     {{- if .Values.redis.priorityClassName }}
     priorityClassName: {{ .Values.redis.priorityClassName | quote }}
     {{- end }}
-    args: ["/etc/redis/redis.conf","--requirepass $(REDIS_PASSWORD)"]
+    args: ["/etc/redis/redis.conf","--requirepass $REDIS_PASSWORD"]
     {{- if .Values.redis.tls.enabled }}
     tls:
       enabled: {{ .Values.redis.tls.enabled }}
@@ -203,6 +204,9 @@ spec:
         {{- if ne $platform "OPENSHIFT" }}
         seccompProfile:
           type: RuntimeDefault
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.securityContext.fsGroup }}
         {{- end }}
       containers:
         - name: operator
@@ -210,6 +214,7 @@ spec:
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
@@ -270,21 +275,30 @@ spec:
             successThreshold: 1
             failureThreshold: 10
           {{- end }}
-          {{- if and .Values.redis.tls.enabled .Values.redis.tls.generateCerts.enabled }}
           volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- if and .Values.redis.tls.enabled .Values.redis.tls.generateCerts.enabled }}
             - name:      root-ca
               mountPath: /usr/ssl/
+              readOnly: true
             - name:      {{ .Values.dbaas.tls.dbaasAdapterCASecretName }}
               mountPath: /certs/
-          {{- end }}
-      {{- if and .Values.redis.tls.enabled .Values.redis.tls.generateCerts.enabled}}
+              readOnly: true
+            {{- end }}
       volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 100Mi
+      {{- if and .Values.redis.tls.enabled .Values.redis.tls.generateCerts.enabled}}
       - name: root-ca
         secret:
           secretName: {{ .Values.redis.tls.certificateSecretName }}
+          defaultMode: 0400
       - name: dbaas-adapter-certificate
         secret:
           secretName: {{ .Values.dbaas.tls.dbaasAdapterCASecretName }}
+          defaultMode: 0400
       {{- end }}
       {{- if .Values.policies }}
       tolerations:

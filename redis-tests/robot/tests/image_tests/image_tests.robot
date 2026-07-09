@@ -4,14 +4,14 @@ Library    Collections
 Resource   ../shared/keywords.robot
 
 *** Variables ***
-${REDIS_NAMESPACE}    %{OPENSHIFT_WORKSPACE_WA}
+${REDIS_NAMESPACE}         %{OPENSHIFT_WORKSPACE_WA}
 
 *** Keywords ***
 Get Image Tag
     [Arguments]    ${image}
     ${parts}=    Split String    ${image}    :
     ${length}=   Get Length      ${parts}
-    Run Keyword If  ${length} > 1  Return From Keyword  ${parts[2]}  
+    Run Keyword If  ${length} > 1  Return From Keyword  ${parts[2]}
     Run Keywords
     ...  Log To Console  \n[ERROR] Image ${parts} has no tag: ${image}\nMonitored images list: ${MONITORED_IMAGES}
     ...  AND  Fail  Some images were not found, please check your .helpers template and description.yaml in the repository
@@ -37,3 +37,8 @@ Test Hardcoded Images
     ${dd_images}=    Get Dd Images From Config Map    tests-config    ${REDIS_NAMESPACE}
     Skip If    '${dd_images}' == '${None}'    There is no deployDescriptor, not possible to check case!
     Compare Images From Resources With Dd    ${dd_images}
+
+Test Container Hardening
+    [Tags]    redis_container_hardening    redis
+    ${part_of}=       Create List    dbaas-redis
+    Check Container Hardening    ${part_of}    ${REDIS_NAMESPACE}

@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v13 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -138,6 +139,8 @@ func MonitoringDeployment(cr *netcrackerv1.DbaasRedisAdapter) *appsv1.Deployment
 	}
 
 	allowPrivilegeEscalation := false
+	readOnlyRootFilesystem := true
+	tmpSizeLimit := resource.MustParse("100Mi")
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -172,6 +175,7 @@ func MonitoringDeployment(cr *netcrackerv1.DbaasRedisAdapter) *appsv1.Deployment
 						utils.AppInstance:   cr.Spec.Instance,
 						utils.AppVersion:    cr.Spec.ArtifactDescriptorVersion,
 						utils.AppComponent:  "operator",
+						utils.AppPartOf:     cr.Spec.PartOf,
 						utils.AppTechnology: "go",
 						"name":              serviceName,
 					},
@@ -187,6 +191,10 @@ func MonitoringDeployment(cr *netcrackerv1.DbaasRedisAdapter) *appsv1.Deployment
 									Drop: []corev1.Capability{"ALL"},
 								},
 								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{Name: "tmp", MountPath: "/tmp"},
 							},
 							Ports: []corev1.ContainerPort{
 								{
@@ -218,6 +226,16 @@ func MonitoringDeployment(cr *netcrackerv1.DbaasRedisAdapter) *appsv1.Deployment
 					PriorityClassName:  spec.PriorityClassName,
 					Tolerations:        tolerations,
 					RestartPolicy:      "Always",
+					Volumes: []corev1.Volume{
+						{
+							Name: "tmp",
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{
+									SizeLimit: &tmpSizeLimit,
+								},
+							},
+						},
+					},
 				},
 			},
 		},

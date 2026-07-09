@@ -93,6 +93,7 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 					spec.Spec.Redis.TLS,
 					spec.Spec.Redis.PriorityClassName,
 					spec.Spec.PartOf, spec.Spec.ManagedBy,
+					redisName+"-credentials",
 				)
 
 				if spec.Spec.Redis.TLS.ClusterIssuerName != "" {
