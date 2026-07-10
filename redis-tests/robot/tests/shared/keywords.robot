@@ -92,7 +92,9 @@ Get DB Via Dbaas Adapter
 
 Delete DB Via Dbaas Adapter
     [Arguments]    ${redis_host}
-    ${data}=    Set Variable
+    ${data}=    Run Keyword If    '${REDIS_TLS_ENABLED}' == 'true'
+    ...    Set Variable    [{"kind":"Deployment","name":"${redis_host}"},{"kind":"Service","name":"${redis_host}"},{"kind":"ConfigMap","name":"${redis_host}"},{"kind":"Secret","name":"${redis_host}-credentials"},{"kind":"Certificate","name":"${redis_host}-certificate"}]
+    ...    ELSE    Set Variable
     ...    [{"kind":"Deployment","name":"${redis_host}"},{"kind":"Service","name":"${redis_host}"},{"kind":"ConfigMap","name":"${redis_host}"},{"kind":"Secret","name":"${redis_host}-credentials"}]
     ${resp}=    POST On Session
     ...    dbaassession
@@ -100,3 +102,12 @@ Delete DB Via Dbaas Adapter
     ...    data=${data}
     ...    headers=${headers}
     Should Be Equal As Strings    ${resp.status_code}    200
+
+Certificate Should Not Exist
+    [Arguments]    ${certificate_name}
+    ${certificates}=    Get Custom Resources    cert-manager.io/v1    Certificate    ${REDIS_NAMESPACE}
+    ${certificate_names}=    Create List
+    FOR    ${certificate}    IN    @{certificates}
+        Append To List    ${certificate_names}    ${certificate}[metadata][name]
+    END
+    Should Not Contain    ${certificate_names}    ${certificate_name}
