@@ -203,21 +203,18 @@ func (adminService *AdministrationService) getResourcesMapping(serviceName strin
 			},
 		},
 	}
-	// Certificate mapping only applies when TLS is enabled;
-	if adminService.tls.Enabled {
-		certName := serviceName
-		if !strings.HasSuffix(serviceName, certSuffix) {
-			certName = serviceName + certSuffix
-		}
-		mapping["Certificate"] = DBResourceMapping{
-			name: certName,
-			object: &cm.Certificate{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      certName,
-					Namespace: adminService.namespace,
-				},
+	certName := serviceName
+	if !strings.HasSuffix(serviceName, certSuffix) {
+		certName = serviceName + certSuffix
+	}
+	mapping["Certificate"] = DBResourceMapping{
+		name: certName,
+		object: &cm.Certificate{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      certName,
+				Namespace: adminService.namespace,
 			},
-		}
+		},
 	}
 	return mapping
 }
@@ -371,11 +368,11 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 	var objectsToCreate []objectToCreate
 
 	// Created via objectsToCreate instead of common.UpdateCertificate so the owner reference below applies to it.
-	if adminService.tls.Enabled {
-		if err := cm.AddToScheme(adminService.runtimeScheme); err != nil {
-			return "", nil, err
-		}
-		certificate := common.GetCertificateTemplate(logicalDatabaseName, adminService.namespace, adminService.tls.ClusterIssuerName).(*cm.Certificate)
+	certificate, err := common.GetCertificateTemplate(adminService.tls.Enabled, logicalDatabaseName, adminService.namespace, adminService.tls.ClusterIssuerName, adminService.runtimeScheme)
+	if err != nil {
+		return "", nil, err
+	}
+	if certificate != nil {
 		objectsToCreate = append(objectsToCreate, objectToCreate{certificate, &certificate.ObjectMeta})
 	}
 
@@ -577,13 +574,7 @@ func (adminService *AdministrationService) DropResources(ctx context.Context, re
 		resourceKind := resource.Kind
 		resourceName := resource.Name
 
-		obj, known := adminService.getResourcesMapping(resourceName)[resourceKind]
-		if !known || obj.object == nil {
-			logger.Warn(fmt.Sprintf("Unknown resource kind \"%s\" for \"%s\", skipping deletion", resourceKind, resourceName))
-			resource.Status = dao.DELETED
-			dropStatuses = append(dropStatuses, resource)
-			continue
-		}
+		obj := adminService.getResourcesMapping(resourceName)[resourceKind]
 
 		err := core.DeleteRuntimeObject(adminService.kubeClient, obj.object)
 

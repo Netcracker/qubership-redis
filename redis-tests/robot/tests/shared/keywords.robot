@@ -92,10 +92,10 @@ Get DB Via Dbaas Adapter
 
 Delete DB Via Dbaas Adapter
     [Arguments]    ${redis_host}
-    ${data}=    Run Keyword If    '${REDIS_TLS_ENABLED}' == 'true'
-    ...    Set Variable    [{"kind":"Deployment","name":"${redis_host}"},{"kind":"Service","name":"${redis_host}"},{"kind":"ConfigMap","name":"${redis_host}"},{"kind":"Secret","name":"${redis_host}-credentials"},{"kind":"Certificate","name":"${redis_host}-certificate"}]
-    ...    ELSE    Set Variable
-    ...    [{"kind":"Deployment","name":"${redis_host}"},{"kind":"Service","name":"${redis_host}"},{"kind":"ConfigMap","name":"${redis_host}"},{"kind":"Secret","name":"${redis_host}-credentials"}]
+    ${certificate_resource}=    Set Variable If    '${REDIS_TLS_ENABLED}' == 'true'
+    ...    ,{"kind":"Certificate","name":"${redis_host}-certificate"}    ${EMPTY}
+    ${data}=    Catenate    SEPARATOR=
+    ...    [{"kind":"Deployment","name":"${redis_host}"},{"kind":"Service","name":"${redis_host}"},{"kind":"ConfigMap","name":"${redis_host}"},{"kind":"Secret","name":"${redis_host}-credentials"}${certificate_resource}]
     ${resp}=    POST On Session
     ...    dbaassession
     ...    url=/api/${dbaas_api_version}/dbaas/adapter/redis/resources/bulk-drop
