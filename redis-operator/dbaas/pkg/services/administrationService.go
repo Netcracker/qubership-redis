@@ -367,14 +367,8 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 
 	var objectsToCreate []objectToCreate
 
-	// Created via objectsToCreate instead of common.UpdateCertificate so the owner reference below applies to it.
-	certificate, err := common.GetCertificateTemplate(adminService.tls.Enabled, logicalDatabaseName, adminService.namespace, adminService.tls.ClusterIssuerName, adminService.runtimeScheme)
-	if err != nil {
-		return "", nil, err
-	}
-	if certificate != nil {
-		objectsToCreate = append(objectsToCreate, objectToCreate{certificate, &certificate.ObjectMeta})
-	}
+	certErr := common.UpdateCertificate(adminService.tls.Enabled, adminService.tls.ClusterIssuerName, logicalDatabaseName, adminService.namespace, adminService.kubeClient, adminService.runtimeScheme)
+	core.PanicError(certErr, logger.Error, "Failed to update TLS certificate")
 
 	// Making secret for pass
 	credsSecretName := credsName(logicalDatabaseName)

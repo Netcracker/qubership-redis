@@ -30,16 +30,24 @@ var RedisContainerEntryPoint = []string{"/run_entry.sh"}
 var TLSSecretNamePattern = "%s-tls"
 
 func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, namespace string, kubeClient client.Client, runtimeScheme *runtime.Scheme) error {
-	certificateTemplate, err := GetCertificateTemplate(tlsEnabled, logicalDatabaseName, namespace, clusterIssuerName, runtimeScheme)
-	if err != nil {
-		return err
-	}
-	if certificateTemplate == nil {
+	if !tlsEnabled {
 		return nil
 	}
 
-	return core.CreateOrUpdateRuntimeObject(kubeClient, runtimeScheme, nil, certificateTemplate,
+	certificateTemplate := GetCertificateTemplate(logicalDatabaseName, namespace, clusterIssuerName)
+
+	err := cm.AddToScheme(runtimeScheme)
+
+	if err != nil {
+		return err
+	}
+
+	certifErr := core.CreateOrUpdateRuntimeObject(kubeClient, runtimeScheme, nil, certificateTemplate,
 		v1.ObjectMeta{Name: certificateTemplate.GetName(), Namespace: certificateTemplate.GetNamespace()}, true)
+	if certifErr != nil {
+		return certifErr
+	}
+	return nil
 }
 
 func GetIssuerTemplate(dbName, namespace string) client.Object {
@@ -55,13 +63,7 @@ func GetIssuerTemplate(dbName, namespace string) client.Object {
 	}
 }
 
-func GetCertificateTemplate(tlsEnabled bool, dbName, namespace, clusterIssuerName string, runtimeScheme *runtime.Scheme) (*cm.Certificate, error) {
-	if !tlsEnabled {
-		return nil, nil
-	}
-	if err := cm.AddToScheme(runtimeScheme); err != nil {
-		return nil, err
-	}
+func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.Object {
 
 	var ref cmeta.ObjectReference
 	if clusterIssuerName != "" {
@@ -96,7 +98,7 @@ func GetCertificateTemplate(tlsEnabled bool, dbName, namespace, clusterIssuerNam
 			},
 			IssuerRef: ref,
 		},
-	}, nil
+	}
 }
 
 func GetRedisEnvs(tls types.TLS) []corev1.EnvVar {
