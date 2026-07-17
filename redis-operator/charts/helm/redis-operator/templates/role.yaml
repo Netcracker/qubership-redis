@@ -29,6 +29,7 @@ rules:
   - get
   - list
   - update
+  - delete
 {{- end }}
 - apiGroups:
   - ""

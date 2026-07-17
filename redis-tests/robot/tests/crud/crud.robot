@@ -76,3 +76,4 @@ Test Delete DB Via Dbaas Adapter
     ${all_redis_deployments}=  Get Deployment Entity Names For Service  ${REDIS_NAMESPACE}  ${REDIS_HOST}  label_name=name
     Sleep  10s
     Should Not Contain	${all_redis_deployments}  ${REDIS_HOST}
+    Run Keyword If  '${REDIS_TLS_ENABLED}' == 'true'  Certificate Should Not Exist  ${REDIS_HOST}-certificate

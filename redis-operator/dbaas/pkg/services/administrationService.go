@@ -25,6 +25,7 @@ import (
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/redis"
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/templates"
 
+	cm "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/mitchellh/mapstructure"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -69,6 +70,7 @@ var _ coreService.DbAdministration = &AdministrationService{}
 
 var (
 	credsSuffix        = "-credentials"
+	certSuffix         = "-certificate"
 	regexpExpression   = "^[a-z][-a-z0-9]*[a-z0-9]?$"
 	nameRegexp, _      = regexp.Compile(regexpExpression)
 	redisPasswordConst = "REDIS_PASSWORD"
@@ -175,7 +177,7 @@ func (adminService *AdministrationService) getResourcesMapping(serviceName strin
 	if !strings.HasSuffix(serviceName, credsSuffix) {
 		secretOm.Name = credsName(secretOm.Name)
 	}
-	return map[string]DBResourceMapping{
+	mapping := map[string]DBResourceMapping{
 		"Secret": {
 			name: secretOm.Name,
 			object: &v1.Secret{
@@ -201,6 +203,20 @@ func (adminService *AdministrationService) getResourcesMapping(serviceName strin
 			},
 		},
 	}
+	certName := serviceName
+	if !strings.HasSuffix(serviceName, certSuffix) {
+		certName = serviceName + certSuffix
+	}
+	mapping["Certificate"] = DBResourceMapping{
+		name: certName,
+		object: &cm.Certificate{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      certName,
+				Namespace: adminService.namespace,
+			},
+		},
+	}
+	return mapping
 }
 
 // Precompiled list of resources to reduce amount of get operations
