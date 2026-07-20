@@ -9,7 +9,7 @@ global:
   profile: ""
   cloudIntegrationEnabled: true
 
-waitTimeout: 200
+waitTimeout: 300
 serviceAccountName: dbaas-redis-operator
 
 # tolerations Example
