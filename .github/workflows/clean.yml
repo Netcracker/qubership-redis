@@ -1,11 +1,33 @@
 name: Branch Deleted
-on: delete
+on:
+  delete:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+  packages: write
 
 env:
-  TAG_NAME: ${{ github.event.ref }}
+  TAG_NAME: ${{ github.event.ref || github.ref }}
 
 jobs:
+  delete-merged-branch:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'delete-branch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete head branch
+        run: |
+          curl -X DELETE \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/${{ github.head_ref }}"
+
   delete:
+    if: (github.event_name == 'delete' && github.event.ref_type == 'branch') || github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
@@ -28,7 +50,6 @@ jobs:
           - name: qubership-docker-redis-8
             file: docker-redis/8/Dockerfile
             context: docker-redis/8
-    if: github.event.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub
