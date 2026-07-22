@@ -83,6 +83,8 @@ jobs:
           platforms: linux/amd64
           push: ${{ env.PUSH }}
           tags: ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ env.TAG_NAME }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
           provenance: false
       - uses: actions/delete-package-versions@v5
         with:
