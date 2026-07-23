@@ -83,10 +83,12 @@ jobs:
           platforms: linux/amd64
           push: ${{ env.PUSH }}
           tags: ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ env.TAG_NAME }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
           provenance: false
       - uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ matrix.component.name }}
           package-type: 'container'
           package-version-ids: ${{ steps.get-ids-for-delete.outputs.ids-for-delete }}
-        if: ${{ steps.get-ids-for-delete.outputs.ids-for-delete != '' && github.event_name == 'release' }}
+        if: ${{ steps.get-ids-for-delete.outputs.ids-for-delete != '' }}
