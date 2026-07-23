@@ -5,7 +5,6 @@ on:
     types: [closed]
 
 permissions:
-  contents: write
   packages: write
 
 env:
@@ -13,7 +12,7 @@ env:
 
 jobs:
   delete:
-    if: (github.event_name == 'delete' && github.event.ref_type == 'branch') || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    if: (github.event_name == 'delete' && github.event.ref_type == 'branch') || github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
@@ -59,10 +58,3 @@ jobs:
           package-type: 'container'
           package-version-ids: ${{ steps.get-ids-for-delete.outputs.ids-for-delete }}
         if: ${{ steps.get-ids-for-delete.outputs.ids-for-delete != '' }}
-      - name: Delete head branch
-        if: github.event_name == 'pull_request' && matrix.component.name == 'qubership-redis-operator' && contains(github.event.pull_request.labels.*.name, 'delete-branch')
-        run: |
-          curl -X DELETE \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/${{ github.head_ref }}"
