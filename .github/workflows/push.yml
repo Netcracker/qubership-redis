@@ -85,6 +85,7 @@ jobs:
           tags: ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ env.TAG_NAME }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
+            com.netcracker.build-run=${{ github.run_id }}-${{ github.run_attempt }}
           provenance: false
       - uses: actions/delete-package-versions@v5
         with:
