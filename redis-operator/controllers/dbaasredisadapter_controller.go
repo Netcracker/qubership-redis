@@ -39,11 +39,18 @@ import (
 
 const specConfigMapName = "last-applied-configuration-info"
 
-func onlySpecConfigMap() predicate.Predicate {
-	nameMatches := func(obj client.Object) bool {
+func onlySpecConfigMapDelete() predicate.Predicate {
+	isSpecConfigMap := func(obj client.Object) bool {
 		return obj.GetName() == specConfigMapName
 	}
-	return predicate.NewPredicateFuncs(nameMatches)
+	return predicate.Funcs{
+		CreateFunc:  func(event.CreateEvent) bool { return false },
+		UpdateFunc:  func(event.UpdateEvent) bool { return false },
+		GenericFunc: func(event.GenericEvent) bool { return false },
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return isSpecConfigMap(e.Object)
+		},
+	}
 }
 
 // DbaasRedisAdapterReconciler reconciles a DbaasRedisAdapter object
@@ -89,7 +96,7 @@ func (r *DbaasRedisAdapterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(
 			&corev1.ConfigMap{},
 			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &netcrackercomv2.DbaasRedisAdapter{}),
-			builder.WithPredicates(onlySpecConfigMap()),
+			builder.WithPredicates(onlySpecConfigMapDelete()),
 		).
 		WithEventFilter(ignoreStatusUpdatePredicate()).
 		Complete(r)
