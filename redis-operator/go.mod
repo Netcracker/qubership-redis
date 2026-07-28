@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	github.com/Netcracker/qubership-dbaas-adapter-core v0.11.1
-	github.com/Netcracker/qubership-nosqldb-operator-core v1.0.8
+	github.com/Netcracker/qubership-nosqldb-operator-core v1.0.9-0.20260728082354-de5117d79498
 	github.com/cert-manager/cert-manager v1.15.3
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/gofiber/fiber/v2 v2.52.12

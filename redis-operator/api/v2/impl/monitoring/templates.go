@@ -1,6 +1,7 @@
 package monitoring
 
 import (
+	"context"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
 	utils2 "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/utils"
@@ -69,13 +70,25 @@ func (r *MonitoringBuilder) Build(ctx core.ExecutionContext) core.Executable {
 
 			err := utils.CreateRuntimeObjectContextWrapper(ctx, deployment, deployment.ObjectMeta)
 			core.PanicError(err, log.Error, "Monitoring deployment creation failed")
+			goCtx, _ := ctx.Get(constants.ContextGoCtx).(context.Context)
+			if goCtx == nil {
+				goCtx = context.Background()
+			}
 
 			log.Debug("Waiting for monitoring is ready")
-			err = helperImpl.WaitForPodsReady(
+			errCh := make(chan error, 1)
+			go func() {
+				errCh <- helperImpl.WaitForPodsReady(
 				deployment.Spec.Template.ObjectMeta.Labels,
 				request.Namespace,
 				1,
 				cr.Spec.WaitTimeout)
+			}()
+			select {
+			case err = <-errCh:
+			case <-goCtx.Done():
+				err = goCtx.Err()
+			}
 			core.PanicError(err, log.Error, "Failed waiting for monitoring pod is ready")
 
 			return nil
