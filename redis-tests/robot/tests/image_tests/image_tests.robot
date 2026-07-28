@@ -41,5 +41,4 @@ Test Hardcoded Images
 Test Container Hardening
     [Tags]    redis_container_hardening    redis
     ${part_of}=       Create List    dbaas-redis
-    ${exclusions}=    Create Dictionary    _all=CH12, CH4
-    Check Container Hardening    ${part_of}    ${REDIS_NAMESPACE}  ${exclusions}
+    Check Container Hardening    ${part_of}    ${REDIS_NAMESPACE}

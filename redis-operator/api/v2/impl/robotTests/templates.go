@@ -1,6 +1,7 @@
 package robotTests
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -53,11 +54,24 @@ func (r *RobotBuilder) Build(ctx core.ExecutionContext) core.Executable {
 			err = utils.CreateRuntimeObjectContextWrapper(ctx, dc, dc.ObjectMeta)
 			core.PanicError(err, log.Error, "RobotTests deployment config processing failed")
 
+			goCtx, _ := ctx.Get(constants.ContextGoCtx).(context.Context)
+			if goCtx == nil {
+				goCtx = context.Background()
+			}
+
 			log.Debug("Waiting for robot is ready")
-			err = helperImpl.WaitForTestsReady(
-				dc.Name,
-				dc.Namespace,
-				cr.Spec.WaitTimeout)
+			errCh := make(chan error, 1)
+			go func() {
+				errCh <- helperImpl.WaitForTestsReady(
+					dc.Name,
+					dc.Namespace,
+					cr.Spec.WaitTimeout)
+			}()
+			select {
+			case err = <-errCh:
+			case <-goCtx.Done():
+				err = goCtx.Err()
+			}
 			core.PanicError(err, log.Error, "RobotTests failed")
 
 			return nil

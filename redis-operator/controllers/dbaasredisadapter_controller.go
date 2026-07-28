@@ -19,11 +19,14 @@ package controllers
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -33,6 +36,22 @@ import (
 	netcrackercomv2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/api/v2/impl"
 )
+
+const specConfigMapName = "last-applied-configuration-info"
+
+func onlySpecConfigMapDelete() predicate.Predicate {
+	isSpecConfigMap := func(obj client.Object) bool {
+		return obj.GetName() == specConfigMapName
+	}
+	return predicate.Funcs{
+		CreateFunc:  func(event.CreateEvent) bool { return false },
+		UpdateFunc:  func(event.UpdateEvent) bool { return false },
+		GenericFunc: func(event.GenericEvent) bool { return false },
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return isSpecConfigMap(e.Object)
+		},
+	}
+}
 
 // DbaasRedisAdapterReconciler reconciles a DbaasRedisAdapter object
 type DbaasRedisAdapterReconciler struct {
@@ -74,6 +93,11 @@ func (r *DbaasRedisAdapterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Reconciler = newReconciler(mgr)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netcrackercomv2.DbaasRedisAdapter{}).
+		Watches(
+			&corev1.ConfigMap{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &netcrackercomv2.DbaasRedisAdapter{}),
+			builder.WithPredicates(onlySpecConfigMapDelete()),
+		).
 		WithEventFilter(ignoreStatusUpdatePredicate()).
 		Complete(r)
 }
