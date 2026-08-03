@@ -47,7 +47,6 @@ data:
               - "project-configuration"
               - "redis-default-conf"
               - "redis-monitoring-agent-config"
-              - "resource-profile-replicator"
               - "tests-config"
               - "hashversion"
               - "version"
