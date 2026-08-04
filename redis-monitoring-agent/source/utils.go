@@ -183,12 +183,6 @@ func (r *TelegrafMonitoringService) updateTelegrafConfAndEnvironmentVariables(re
 
 	//generate environment variable pass with prefix
 	//replace variables with prefix in inputs with the variables from environment
-	redisInstancesCount := len(redisConfMap)
-
-	if redisInstancesCount < 1 {
-		return &core.ExecutionError{Msg: "Redis instances not found"}
-	}
-
 	r.logger.Debug(fmt.Sprintf("Found %v redis instances", len(redisConfMap)))
 
 	for redisInstance, redisConf := range redisConfMap {
@@ -282,12 +276,10 @@ func (r *TelegrafMonitoringService) Refresh() error {
 
 	r.logger.Info("Stopping monitoring process...")
 	core.HandleError(r.stopProcess(), r.logger.Warn, "Failed stopping monitoring process")
-	if len(r.redisConf) > 0 {
-		r.logger.Debug("Building new telegraf.conf....")
-		updConfErr := r.updateTelegrafConfAndEnvironmentVariables(r.redisTelegrafConfigMap, r.redisConf)
-		if updConfErr != nil {
-			return updConfErr
-		}
+	r.logger.Debug("Building new telegraf.conf....")
+	updConfErr := r.updateTelegrafConfAndEnvironmentVariables(r.redisTelegrafConfigMap, r.redisConf)
+	if updConfErr != nil {
+		return updConfErr
 	}
 	r.logger.Info("Starting monitoring process....")
 	return r.startProcess()
