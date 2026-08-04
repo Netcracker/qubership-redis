@@ -20,8 +20,6 @@ func main() {
 	namespace := getEnv("NAMESPACE", "")
 	redisInstancesLabelSelector := getEnv("REDIS_INSTANCES_LABEL_SELECTOR", "redis-dbaas-adapter")
 	telegrafConfConfigMapName := getEnv("TELEGRAF_CONF_CONFIGMAP", "")
-	//cmdMonitoringCommand := getEnv("CMD_MONITORING_COMMAND", "/vault/vault-env /sbin/tini -- telegraf")
-	//cmdMonitoringCommand := getEnv("CMD_MONITORING_COMMAND", "/sbin/tini -- telegraf")
 	cmdMonitoringCommand := getEnv("CMD_MONITORING_COMMAND", "env && ls && echo")
 	redisPort := getEnv("REDIS_PORT", "6379")
 	if namespace == "" || telegrafConfConfigMapName == "" {

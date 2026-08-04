@@ -66,7 +66,6 @@ type DbaasRedisAdapterSpec struct {
 	PodSecurityContext        *v1.PodSecurityContext  `json:"securityContext,omitempty"`
 	Policies                  *Policies               `json:"policies,omitempty"`
 	DeploymentVersion         string                  `json:"deploymentVersion,omitempty"`
-	VaultRegistration         types.VaultRegistration `json:"vaultRegistration,omitempty"`
 	ServiceAccountName        string                  `json:"serviceAccountName"`
 	ImagePullPolicy           v1.PullPolicy           `json:"imagePullPolicy,omitempty" common:"true"`
 	TLS                       `json:"tls,omitempty" common:"true"`

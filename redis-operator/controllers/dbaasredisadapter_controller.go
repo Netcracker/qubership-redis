@@ -174,10 +174,6 @@ func (s *RedisReconciler) GetDeploymentVersion() string {
 	return s.Instance.Spec.DeploymentVersion
 }
 
-func (s *RedisReconciler) GetVaultRegistration() *types.VaultRegistration {
-	return &s.Instance.Spec.VaultRegistration
-}
-
 func (s *RedisReconciler) UpdateDRStatus(status types.DisasterRecoveryStatus) {
 
 }
