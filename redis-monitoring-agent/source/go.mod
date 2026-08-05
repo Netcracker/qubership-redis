@@ -24,20 +24,20 @@ require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
-	github.com/go-openapi/jsonpointer v0.22.0 // indirect
+	github.com/go-openapi/jsonpointer v1.0.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.1 // indirect
-	github.com/go-openapi/swag v0.24.1 // indirect
-	github.com/go-openapi/swag/cmdutils v0.25.4 // indirect
-	github.com/go-openapi/swag/conv v0.25.4 // indirect
-	github.com/go-openapi/swag/fileutils v0.25.4 // indirect
-	github.com/go-openapi/swag/jsonname v0.25.4 // indirect
-	github.com/go-openapi/swag/jsonutils v0.25.4 // indirect
-	github.com/go-openapi/swag/loading v0.25.4 // indirect
-	github.com/go-openapi/swag/mangling v0.25.4 // indirect
-	github.com/go-openapi/swag/netutils v0.25.4 // indirect
-	github.com/go-openapi/swag/stringutils v0.25.4 // indirect
-	github.com/go-openapi/swag/typeutils v0.25.4 // indirect
-	github.com/go-openapi/swag/yamlutils v0.25.4 // indirect
+	github.com/go-openapi/swag v0.27.1 // indirect
+	github.com/go-openapi/swag/cmdutils v0.27.1 // indirect
+	github.com/go-openapi/swag/conv v0.27.1 // indirect
+	github.com/go-openapi/swag/fileutils v0.27.1 // indirect
+	github.com/go-openapi/swag/jsonutils v0.27.1 // indirect
+	github.com/go-openapi/swag/loading v0.27.1 // indirect
+	github.com/go-openapi/swag/mangling v0.27.1 // indirect
+	github.com/go-openapi/swag/netutils v0.27.1 // indirect
+	github.com/go-openapi/swag/pools v0.27.1 // indirect
+	github.com/go-openapi/swag/stringutils v0.27.1 // indirect
+	github.com/go-openapi/swag/typeutils v0.27.1 // indirect
+	github.com/go-openapi/swag/yamlutils v0.27.1 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -83,11 +83,11 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20250808145144-a408d31f581a // indirect
-	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/oauth2 v0.32.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
-	golang.org/x/term v0.43.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/term v0.45.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect

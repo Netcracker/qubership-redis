@@ -16,7 +16,7 @@ RUN mkdir -p bin \
        -asmflags "all=-trimpath=${GOPATH}"
 
 FROM redis:8.8.0-alpine AS redis
-FROM telegraf:1.39.1-alpine
+FROM telegraf:1.39.2-alpine
 
 USER root
 COPY health.sh /health.sh
