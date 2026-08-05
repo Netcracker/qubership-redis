@@ -281,6 +281,10 @@ func (r *TelegrafMonitoringService) Refresh() error {
 	if updConfErr != nil {
 		return updConfErr
 	}
+	if len(r.redisConf) == 0 {
+		r.logger.Info("No redis instances to monitor, leaving monitoring process stopped")
+		return nil
+	}
 	r.logger.Info("Starting monitoring process....")
 	return r.startProcess()
 }
