@@ -129,7 +129,12 @@
           "properties": {
             "gatewayName": { "type": "string", "default": "default-external-gateway" },
             "gatewayNamespace": { "type": "string", "default": "gateway-system" },
-            "gatewaySectionName": { "type": "string", "default": "" }
+            "gatewaySectionName": { "type": "string", "default": "" },
+            "type": {
+              "type": "string",
+              "default": "legacy-ingress",
+              "description": "Select network mode: legacy-ingress, gateway-api-default, or both (comma-separated). Overridden by GATEWAY_SYSTEM_TYPE when global.cloudIntegrationEnabled is true."
+            }
           }
         },
         "adapter": {
@@ -347,6 +352,10 @@
     "REDIS_PROFILE": { "type": "string" },
     "CLOUD_PUBLIC_HOST": { "type": "string" },
     "PAAS_PLATFORM": { "type": "string" },
+    "GATEWAY_SYSTEM_TYPE": {
+      "type": "string",
+      "description": "Cloud passport override for dbaas.gatewayApi.type. Applied only when global.cloudIntegrationEnabled is true."
+    },
     "nameOverride": { "type": "string" },
     "fullnameOverride": { "type": "string" },
     "createIngress": { "$ref": "#/definitions/booleanOrString" }

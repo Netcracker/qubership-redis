@@ -189,7 +189,8 @@ The list of DBaaS Redis Adapter parameters is as follows:
 | Parameter                                             | Mandatory | Type   | Default                            | Description                                                                              |
 |-------------------------------------------------------|-----------|--------|------------------------------------|------------------------------------------------------------------------------------------|
 | `dbaas.install`                                       | false     | bool   | true                               | If the DBaaS adapter needs to be installed.                                              |
-| `dbaas.createIngress`                                 | false     | bool   | false                              | Creates DBaaS adapter ingress resources. Requires `CLOUD_PUBLIC_HOST`.                   |
+| `dbaas.createIngress`                                 | false     | bool   | false                              | Creates DBaaS adapter ingress and/or Gateway API resources, per `dbaas.gatewayApi.type`. Requires `CLOUD_PUBLIC_HOST`. |
+| `dbaas.gatewayApi.type`                               | false     | string | legacy-ingress                     | Network mode(s) to deploy: `legacy-ingress`, `gateway-api-default`, or both (comma-separated). Overridable via `GATEWAY_SYSTEM_TYPE`. |
 | `dbaas.gatewayApi.gatewayName`                        | false     | string | default-external-gateway           | Chart default for Gateway name.                   |
 | `dbaas.gatewayApi.gatewayNamespace`                   | false     | string | gateway-system                     | Chart default for Gateway namespace.            |
 | `dbaas.gatewayApi.gatewaySectionName`                 | false     | string | ""                                 | Optional Gateway listener name.                                                          |
