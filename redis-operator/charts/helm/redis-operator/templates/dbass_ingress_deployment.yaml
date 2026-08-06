@@ -6,6 +6,7 @@ metadata:
     gateway-api-converter.netcracker.com/ignore: "true"
   labels:
     {{- include "redis.defaultLabels" . | nindent 4 }}
+    {{- include "redis.ingressLabels" . | nindent 4 }}
   name: {{ printf "%s-dbaas-adapter-swagger" .Release.Namespace }}
 spec:
   rules:

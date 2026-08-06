@@ -279,6 +279,14 @@ Uses value from values.yaml if defined, otherwise value from environment variabl
 {{- end -}}
 
 {{/*
+Ingress classification labels, expected on both Ingress and HTTPRoute resources for this endpoint.
+*/}}
+{{- define "redis.ingressLabels" -}}
+deployment.netcracker.com/ingress-type: 'private-network'
+deployment.netcracker.com/ingress-audience-type: 'ops-user'
+{{- end -}}
+
+{{/*
 Common redis resources labels
 */}}
 {{- define "redis.defaultLabels" -}}
