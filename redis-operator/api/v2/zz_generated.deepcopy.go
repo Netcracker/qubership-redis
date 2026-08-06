@@ -172,7 +172,6 @@ func (in *DbaasRedisAdapterSpec) DeepCopyInto(out *DbaasRedisAdapterSpec) {
 		*out = new(Policies)
 		(*in).DeepCopyInto(*out)
 	}
-	in.VaultRegistration.DeepCopyInto(&out.VaultRegistration)
 	out.TLS = in.TLS
 }
 

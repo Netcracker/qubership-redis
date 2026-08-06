@@ -64,40 +64,34 @@ Create the name of the service account to use
 
 
 {{/*
-[NoSQL Operator Core] Vault secret template
+[NoSQL Operator Core] Secret template
 Arguments:
 Dictionary with:
-1. "vlt" - .vaultRegistration section
-2. "secret" section includes next elements:
+1. "secret" section includes next elements:
     .secretName (required)
     .password (required)
     .username (optional)
-    .vaultPasswordPath (optional)
-3. "isInternal" is a required boolean parameter
 Usage example:
-{{template "nosql.core.secret.vault" (dict "vltEnabled" .Values.vaultRegistration "vltPath" "kv_path" "secret" .Values.cassandra )}}
+{{template "nosql.core.secret" (dict "secret" .Values.redis "values" .Values)}}
 */}}
-{{- define "nosql.core.secret.vault" -}}
+{{- define "nosql.core.secret" -}}
 {{ $_ := set . "userEnv" "" }}
-{{ $_ := set . "userPass" "" }}
-{{include "nosql.core.secret.vault.fromEnv" $_ }}
+{{ $_ := set . "passEnv" "" }}
+{{include "nosql.core.secret.fromEnv" $_ }}
 {{- end -}}
 
 {{/*
-[NoSQL Operator Core] Vault secret template
+[NoSQL Operator Core] Secret template with env override
 Arguments:
 Dictionary with:
-1. "vlt" - .vaultRegistration section
-2. "secret" section includes next elements:
+1. "secret" section includes next elements:
     .secretName (required)
     .password (required)
     .username (optional)
-    .vaultPasswordPath (optional)
-3. "isInternal" is a required boolean parameter
 Usage example:
-{{template "nosql.core.secret.vault.fromEnv" (dict "vltEnabled" .Values.vaultRegistration "vltPath" "kv_path" "secret" .Values.cassandra "userEnv" .Values.CASSANDRA_USERNAME "passEnv" .Values.CASSANDRA_PASSWORD )}}
+{{template "nosql.core.secret.fromEnv" (dict "secret" .Values.redis "userEnv" .Values.USERNAME "passEnv" .Values.PASSWORD "values" .Values)}}
 */}}
-{{- define "nosql.core.secret.vault.fromEnv" -}}
+{{- define "nosql.core.secret.fromEnv" -}}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -108,39 +102,27 @@ metadata:
   labels:
     {{ include "redis.defaultLabels" .values | nindent 4 }}
 stringData:
-  {{- if .vltEnabled }}
-    {{- if .secret.vaultPasswordPath }}
-  password: {{ .secret.vaultPasswordPath | quote }}
-    {{- else }}
-        {{- if (.isInternal) }}
-  password: 'vault:{{ .vltPath }}'
-        {{- else }}
   password: {{ include "fromEnv" (dict "envName" .passEnv "default" .secret.password) | quote }}
-        {{- end }}
-    {{- end }}
-  {{- else }}
-  password: {{ include "fromEnv" (dict "envName" .passEnv "default" .secret.password) | quote }}
-  {{- end }}
   {{- if .secret.username }}
-  username: {{ include "fromEnv" (dict "envName" .userEnv "default" .secret.username) | quote }} 
+  username: {{ include "fromEnv" (dict "envName" .userEnv "default" .secret.username) | quote }}
   {{- end }}
 type: Opaque
 {{- end -}}
 
 {{/*
 [NoSQL Operator Core] Internal secret template
-{{template "nosql.core.secret.internal" (dict "vlt" .Values.vaultRegistration "secret" .Values.redis)}}
+{{template "nosql.core.secret.internal" (dict "secret" .Values.redis "values" .Values)}}
 */}}
 {{- define "nosql.core.secret.internal" -}}
-{{include "nosql.core.secret.vault" (set . "isInternal" true)}}
+{{include "nosql.core.secret" .}}
 {{- end -}}
 
 {{/*
 [NoSQL Operator Core] External secret template
-{{template "nosql.core.secret.external" (dict "vlt" .Values.vaultRegistration "secret" .Values.redis)}}
+{{template "nosql.core.secret.external" (dict "secret" .Values.redis "values" .Values)}}
 */}}
 {{- define "nosql.core.secret.external" -}}
-{{include "nosql.core.secret.vault" (set . "isInternal" false)}}
+{{include "nosql.core.secret" .}}
 {{- end -}}
 
 {{/*
@@ -201,30 +183,11 @@ Usage example:
 {{- end -}}
 
 {{/*
-[Redis Operator Core] from env of from values
+[Redis Operator Core] from env or from values
 Dictionary with:
 1. "envName" - name of env var to get value from
 2.  "default" - default value from values.yaml
-{{template "ifEnvThenDefault" (dict "envName" .Values.VAULT_ADDR "then" (printf %s_%s .Values.VAULT_ADDR "const" ) "default" .Values.vaultRegistration.token) }}
-*/}}
-{{- define "ifEnvThenDefault" -}}
-  {{- $value := .default -}}
-  {{- if .envName -}}
-    {{- $value = .then -}}
-  {{- else -}}
-    {{- $value = .default -}}
-  {{- end -}}
-  {{- if $value -}}
-  {{ printf "%s" $value }}
-  {{- end -}}
-{{- end -}}
-
-{{/*
-[Redis Operator Core] from env of from values
-Dictionary with:
-1. "envName" - name of env var to get value from
-2.  "default" - default value from values.yaml
-{{template "fromEnv" (dict "envName" ".Values.VAULT_ADDR" "default" .Values.vaultRegistration.token) }}
+{{template "fromEnv" (dict "envName" .Values.API_DBAAS_ADDRESS "default" .Values.dbaas.aggregator.dbaasAggregatorRegistrationAddress) }}
 */}}
 {{- define "fromEnv" -}}
   {{- $envValue := .envName -}}

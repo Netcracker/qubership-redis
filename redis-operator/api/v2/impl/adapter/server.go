@@ -76,7 +76,7 @@ func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInt
 		int(port),
 		adminService,
 		log,
-		false, //we don't need static roles in vault
+		false,
 		nil,
 		"",
 	)
