@@ -2176,7 +2176,7 @@
               "tags": []
             }
           ],
-          "title": "Memory Usage: $instance",
+          "title": "Memory usage over time: $instance",
           "type": "timeseries"
         },
         {
@@ -2465,7 +2465,7 @@
               "tags": []
             }
           ],
-          "title": "CPU usage: $instance",
+          "title": "CPU usage over time: $instance",
           "type": "timeseries"
         },
         {
