@@ -48,6 +48,7 @@ dbaas:
     gatewayName: "default-external-gateway"
     gatewayNamespace: "gateway-system"
     gatewaySectionName: ""    # Optional Gateway listener name
+    type: "legacy-ingress"    # Chart default for GATEWAY_SYSTEM_TYPE: legacy-ingress, gateway-api-default, or both (comma-separated)
   adapter:
     username: dbaas-aggregator
     password: dbaas-aggregator
