@@ -1,0 +1,63 @@
+name: "CI: Dev Build"
+run-name: "Dev image for ${{ github.event.repository.name }}: ${{ github.run_number }} - ${{ github.actor }}"
+on:
+  push:
+    branches:
+      - "**"
+    paths-ignore:
+      - "docs/**"
+      - "CODE-OF-CONDUCT.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "README.md"
+      - "SECURITY.md"
+  pull_request:
+    branches:
+      - "**"
+    paths-ignore:
+      - "docs/**"
+      - "CODE-OF-CONDUCT.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "README.md"
+      - "SECURITY.md"
+  workflow_dispatch:
+    inputs:
+      tags:
+        required: false
+        type: string
+        default: ""
+        description: "Tags"
+      dry-run:
+        required: true
+        type: boolean
+        default: false
+        description: "Dry run mode"
+      replace-symbol:
+        required: false
+        type: string
+        default: "_"
+        description: "Symbol to replace in tags"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.ref_type == 'branch' && format('build-branch-{0}', github.ref_name) || format('build-{0}', github.sha) }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: "Build images"
+    permissions:
+      contents: write
+      packages: write
+    secrets: inherit
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-infra-docker-build.yaml@910-feat-add-declarative-config-driven-common-cicd-pipelines
+    with:
+      config-file: ".github/docker-build-config.json"
+      dry-run: ${{ github.event.inputs.dry-run || github.event_name == 'pull_request' }}
+      tags: ${{ github.event.inputs.tags || '' }}
+      replace-symbol: ${{ github.event.inputs.replace-symbol || '_' }}
+      diff-build: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      max-parallel: 4
