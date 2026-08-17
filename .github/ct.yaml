@@ -1,0 +1,4 @@
+chart-dirs:
+  - redis-operator/charts/helm
+validate-maintainers: false
+check-version-increment: false
