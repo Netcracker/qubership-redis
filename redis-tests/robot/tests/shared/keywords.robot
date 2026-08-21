@@ -16,6 +16,7 @@ ${REDIS_DBAAS_USER}             %{REDIS_DBAAS_USER=dbaas-aggregator}
 ${REDIS_DBAAS_PASSWORD}         %{REDIS_DBAAS_PASSWORD=dbaas-aggregator}
 ${DBAAS_AGGREGATOR_REGISTRATION_ADDRESS}    %{DBAAS_AGGREGATOR_REGISTRATION_ADDRESS}
 ${DBAAS_ENABLED}                %{DBAAS_ENABLED=true}
+${TAGS}                          %{TAGS=}
 
 ${REDIS_TLS_ENABLED}            %{TLS_ENABLED=false}
 ${REDIS_TLS_ROOTCERT}           %{TLS_ROOTCERT=/usr/ssl/ca.crt}
@@ -67,6 +68,11 @@ Add Data To Redis
     [Arguments]    ${redis_conn}    ${REDIS_KEY}    ${REDIS_TEST_DATA}
     ${code}=    Append To Redis    ${redis_conn}    ${REDIS_KEY}    ${REDIS_TEST_DATA}
     Should Be Equal As Strings    ${code}    10
+
+Set Data To Redis
+    [Arguments]    ${redis_conn}    ${REDIS_KEY}    ${REDIS_DATA}
+    ${result}=    Set To Redis    ${redis_conn}    ${REDIS_KEY}    ${REDIS_DATA}
+    Should Be Equal As Strings    ${result}    True
 
 Get Data From Keyspace
     [Arguments]    ${redis_conn}    ${REDIS_KEY}
