@@ -151,6 +151,27 @@ func RobotDeployment(cr *netcrackerv1.DbaasRedisAdapter) *v1.Deployment {
 		{Name: "robot-output", MountPath: "/opt/robot/output"},
 	}
 
+	if !cr.Spec.Dbaas.Install && cr.Spec.Redis.SecretName != "" {
+		secretMode := int32(0440)
+		volumes = append(volumes, corev1.Volume{
+			Name: "redis-credentials",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: cr.Spec.Redis.SecretName,
+					Items: []corev1.KeyToPath{
+						{Key: constants.Password, Path: "redis-password"},
+					},
+					DefaultMode: &secretMode,
+				},
+			},
+		})
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "redis-credentials",
+			MountPath: "/var/run/secrets/redis",
+			ReadOnly:  true,
+		})
+	}
+
 	if cr.Spec.Dbaas.Install {
 		secretMode := int32(0400)
 		volumes = append(volumes, corev1.Volume{
