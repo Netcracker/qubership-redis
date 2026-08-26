@@ -67,8 +67,8 @@ dbaas:
     dbaasAdapterCASecretName: dbaas-adapter-certificate
     duration: 365
     subjectAlternativeName:
-      additionalDnsNames: [ ]
-      additionalIpAddresses: [ ]
+      additionalDnsNames: []
+      additionalIpAddresses: []
     certificates:
       tls_key:
       tls_crt:
@@ -106,7 +106,7 @@ redis:
     limits:
       cpu: 250m
       memory: 256Mi
-  #default values for redis
+  # default values for redis
   conf:
     bind: "0.0.0.0"
     protected-mode: "yes"
@@ -227,5 +227,5 @@ PART_OF: 'dbaas-redis'
 # Delimiter for labels
 DELIMITER: "-"
 # Artifact descriptor version which is installed.
-ARTIFACT_DESCRIPTOR_VERSION: "" # TO_BE_REPLACED
+ARTIFACT_DESCRIPTOR_VERSION: ""  # TO_BE_REPLACED
 MANAGED_BY: "operator"
