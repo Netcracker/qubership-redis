@@ -167,6 +167,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dbaas-redis-operator
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
   labels:
     name: dbaas-redis-operator
     app.kubernetes.io/name: {{ .Values.SERVICE_NAME }}
