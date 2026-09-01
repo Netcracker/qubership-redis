@@ -23,11 +23,11 @@ data:
       quiet = false
       hostname = "$NAMESPACE"
       omit_hostname = false
-  
+
   telegraf-outputs: >-
-    
+
     [outputs]
-    
+
 {{- if eq .Values.monitoringAgent.metricCollector "prometheus" }}
 
     [[ outputs.prometheus_client ]]
@@ -44,16 +44,16 @@ data:
       username = "$INFLUXDB_USER"
       password = "$INFLUXDB_PASSWORD"
 {{ end }}
-  
+
   telegraf-inputs: >-
-    
+
     # Configured for TELEGRAF_REDIS_PREFIX_DBNAME
-    
+
     [[inputs.redis]]
       servers = ["tcp://TELEGRAF_REDIS_PREFIX_DBSERVICE:TELEGRAF_REDIS_PREFIX_DBPORT"]
       password = "TELEGRAF_REDIS_PREFIX_DBPASS"
-      fielddrop = ["total_connections_received", "total_net_input_bytes", "total_net_output_bytes", "maxmemory_policy", "mem_fragmentation_ratio", "lru_clock", "aof_*", "rdb_*", "sync_*", "migrate_cached_sockets", "keyspace_hits", "keyspace_misses", "latest_fork_usec", "role", "master_*", "second_*", "repl_*", "connected_slaves"]
-      
+      fielddrop = ["total_connections_received", "total_net_input_bytes", "total_net_output_bytes", "maxmemory_policy", "mem_fragmentation_ratio", "lru_clock", "aof_*", "rdb_*", "sync_*", "migrate_cached_sockets", "keyspace_hits", "keyspace_misses", "latest_fork_usec", "role", "master_*", "second_*", "repl_*", "connected_slaves", "io_thread_*", "db*distrib*", "module"]
+
   {{- if .Values.redis.tls.enabled }}
       tls_ca = "/usr/ssl/ca.crt"
       insecure_skip_verify = true
