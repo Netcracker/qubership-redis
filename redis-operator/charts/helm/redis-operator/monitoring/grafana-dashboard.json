@@ -3438,7 +3438,7 @@
       {
         "auto": true,
         "auto_count": 100,
-        "auto_min": "1m",
+        "auto_min": "2m",
         "current": {
           "selected": false,
           "text": "auto",
