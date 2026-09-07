@@ -3,43 +3,51 @@
     {
       "name": "qubership-docker-redis-7",
       "file": "docker-redis/7/Dockerfile",
-      "context": "docker-redis"
+      "context": "docker-redis",
+      "changeset": ["docker-redis"]
     },
     {
       "name": "qubership-docker-redis-8",
       "file": "docker-redis/8/Dockerfile",
-      "context": "docker-redis"
+      "context": "docker-redis",
+      "changeset": ["docker-redis"]
     },
     {
       "name": "qubership-redis-operator",
       "file": "redis-operator/Dockerfile",
-      "context": "redis-operator"
+      "context": "redis-operator",
+      "changeset": ["redis-operator"]
     },
 
     {
       "name": "qubership-redis-monitoring-agent",
       "file": "redis-monitoring-agent/Dockerfile",
-      "context": "redis-monitoring-agent"
+      "context": "redis-monitoring-agent",
+      "changeset": ["redis-monitoring-agent"]
     },
     {
       "name": "qubership-redis-tests",
       "file": "redis-tests/Dockerfile",
-      "context": "redis-tests"
+      "context": "redis-tests",
+      "changeset": ["redis-tests"]
     },
     {
       "name": "qubership-redis-transfer",
       "file": "docker-transfer/Dockerfile",
-      "context": "."
+      "context": ".",
+      "changeset": [""]
     },
     {
       "name": "qubership-docker-redis-7",
       "file": "docker-redis/7/Dockerfile",
-      "context": "docker-redis/7"
+      "context": "docker-redis/7",
+      "changeset": ["docker-redis/7"]
     },
     {
       "name": "qubership-docker-redis-8",
       "file": "docker-redis/8/Dockerfile",
-      "context": "docker-redis/8"
+      "context": "docker-redis/8",
+      "changeset": ["docker-redis/8"]
     }
   ],
   "platforms": "linux/amd64"
