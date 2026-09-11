@@ -434,6 +434,15 @@ Note that dbaas-redis-operator requires the following role during the deployment
 
 This role must be bound to the deployer service account.
 
+If `redis.tls.generateCerts.clusterIssuerName` is empty, the chart generates its own root CA in the
+`redis.tls.certificateSecretName` secret (`root-ca` by default) and signs every Redis and logical database
+certificate with it.
+
+**Important**: Production environment requires `clusterIssuerName` for certificates generation.
+
+Cert Manager automatically renews certificates. Redis service does not have any handlers for certificate secret
+changes, so you need to manually restart the affected Redis pods until the old certificate is expired.
+
 #### Set Certificates Manually
 
 Note: this option is only for deployement without DbaaS integration.

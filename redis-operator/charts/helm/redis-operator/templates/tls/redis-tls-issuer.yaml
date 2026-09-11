@@ -1,8 +1,21 @@
 {{- if and .Values.redis.tls.enabled .Values.redis.tls.generateCerts.enabled (not (.Values.redis.tls.generateCerts.clusterIssuerName)) }}
+# A "ca" Issuer can only sign once its CA secret already exists, so this
+# self-signed one exists purely to create that first secret (root-ca).
+# Nothing else is signed with it.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: redis-tls-ca-issuer
+spec:
+  selfSigned: {}
+---
+# Every per-instance certificate is issued through this Issuer instead of
+# being separately self-signed, so they all chain back to the same root-ca.
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: redis-tls-issuer
 spec:
-  selfSigned: {}
+  ca:
+    secretName: {{ .Values.redis.tls.certificateSecretName }}
 {{- end }}

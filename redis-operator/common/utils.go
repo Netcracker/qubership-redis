@@ -29,6 +29,9 @@ var RedisContainerEntryPoint = []string{"/run_entry.sh"}
 
 var TLSSecretNamePattern = "%s-tls"
 
+// Must match the Issuer name defined in redis-tls-issuer.yaml.
+var RedisTLSIssuerName = "redis-tls-issuer"
+
 func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, namespace string, kubeClient client.Client, runtimeScheme *runtime.Scheme) error {
 	if !tlsEnabled {
 		return nil
@@ -50,19 +53,6 @@ func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, 
 	return nil
 }
 
-func GetIssuerTemplate(dbName, namespace string) client.Object {
-	return &cm.Issuer{
-		TypeMeta: v1.TypeMeta{Kind: "Issuer"},
-		ObjectMeta: v1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-tls-issuer", dbName),
-			Namespace: namespace,
-		},
-		Spec: cm.IssuerSpec{
-			IssuerConfig: cm.IssuerConfig{SelfSigned: &cm.SelfSignedIssuer{}},
-		},
-	}
-}
-
 func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.Object {
 
 	var ref cmeta.ObjectReference
@@ -74,7 +64,7 @@ func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.
 		}
 	} else {
 		ref = cmeta.ObjectReference{
-			Name:  "redis-tls-issuer",
+			Name:  RedisTLSIssuerName,
 			Kind:  "Issuer",
 			Group: "cert-manager.io",
 		}
@@ -89,8 +79,20 @@ func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.
 			SecretName: fmt.Sprintf(TLSSecretNamePattern, dbName),
 			Duration:   &v1.Duration{Duration: time.Duration(365*24) * time.Hour},
 			CommonName: "redis-cn",
-			DNSNames:   []string{fmt.Sprintf("%s.%s.svc", dbName, namespace)},
-			IsCA:       true,
+			// Both forms are listed so the cert is valid no matter which one the
+			// connecting client actually resolves.
+			DNSNames: []string{
+				fmt.Sprintf("%s.%s", dbName, namespace),
+				fmt.Sprintf("%s.%s.svc", dbName, namespace),
+			},
+			// Leaf cert chained to IssuerRef - must not be a CA itself.
+			IsCA: false,
+			Usages: []cm.KeyUsage{
+				cm.UsageDigitalSignature,
+				cm.UsageKeyEncipherment,
+				cm.UsageServerAuth,
+				cm.UsageClientAuth,
+			},
 			PrivateKey: &cm.CertificatePrivateKey{
 				Algorithm: cm.RSAKeyAlgorithm,
 				Encoding:  cm.PKCS1,

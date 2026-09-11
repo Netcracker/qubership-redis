@@ -11,6 +11,7 @@ import (
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/templates"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -86,12 +87,17 @@ func (r *RedisBuilder) Build(ctx core.ExecutionContext) core.Executable {
 		ExecuteFunc: func(ctx core.ExecutionContext, cr *netcrackerv1.DbaasRedisAdapter, log *zap.Logger) error {
 			request := ctx.Get(constants.ContextRequest).(reconcile.Request)
 			helperImpl := ctx.Get(constants.KubernetesHelperImpl).(core.KubernetesHelper)
+			kubeClient := ctx.Get(constants.ContextClient).(client.Client)
+			runtimeScheme := ctx.Get(constants.ContextSchema).(*runtime.Scheme)
 			redisSpec := cr.Spec.Redis
 
 			var tolerations []corev1.Toleration
 			if cr.Spec.Policies != nil {
 				tolerations = cr.Spec.Policies.Tolerations
 			}
+
+			certErr := common.UpdateCertificate(redisSpec.TLS.Enabled, redisSpec.TLS.ClusterIssuerName, core2.Redis, request.Namespace, kubeClient, runtimeScheme)
+			core.PanicError(certErr, log.Error, "Failed to update TLS certificate")
 
 			envs := common.GetRedisEnvs(redisSpec.TLS.TLS)
 			deployment := templates.GetRedisDeploymentTemplate(
