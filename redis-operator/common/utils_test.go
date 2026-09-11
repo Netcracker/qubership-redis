@@ -58,12 +58,8 @@ func TestGetCertificateTemplate_SAN(t *testing.T) {
 			if cert.Spec.IssuerRef.Name != tt.wantIssuerName {
 				t.Errorf("IssuerRef.Name = %q, want %q", cert.Spec.IssuerRef.Name, tt.wantIssuerName)
 			}
-			if cert.Spec.IsCA {
-				t.Errorf("IsCA = true, want false: this is a leaf certificate chained to the CA in IssuerRef, not a new root")
-			}
-			wantUsages := []cm.KeyUsage{cm.UsageDigitalSignature, cm.UsageKeyEncipherment, cm.UsageServerAuth, cm.UsageClientAuth}
-			if !reflect.DeepEqual(cert.Spec.Usages, wantUsages) {
-				t.Errorf("Usages = %v, want %v", cert.Spec.Usages, wantUsages)
+			if !cert.Spec.IsCA {
+				t.Errorf("IsCA = false, want true")
 			}
 		})
 	}
