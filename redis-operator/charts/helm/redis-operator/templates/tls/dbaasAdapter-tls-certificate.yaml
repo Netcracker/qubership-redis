@@ -22,7 +22,7 @@ spec:
     name: {{ .Values.redis.tls.generateCerts.clusterIssuerName }}
     kind: ClusterIssuer
   {{- else }}
-    name: redis-tls-ca-issuer
+    name: redis-tls-issuer
     kind: Issuer
   {{- end }}
 {{- end }}

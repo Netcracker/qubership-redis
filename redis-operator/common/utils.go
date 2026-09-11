@@ -93,14 +93,7 @@ func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.
 				fmt.Sprintf("%s.%s", dbName, namespace),
 				fmt.Sprintf("%s.%s.svc", dbName, namespace),
 			},
-			// Leaf cert chained to IssuerRef - must not be a CA itself.
-			IsCA: false,
-			Usages: []cm.KeyUsage{
-				cm.UsageDigitalSignature,
-				cm.UsageKeyEncipherment,
-				cm.UsageServerAuth,
-				cm.UsageClientAuth,
-			},
+			IsCA: true,
 			PrivateKey: &cm.CertificatePrivateKey{
 				Algorithm: cm.RSAKeyAlgorithm,
 				Encoding:  cm.PKCS1,
