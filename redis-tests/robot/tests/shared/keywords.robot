@@ -120,9 +120,9 @@ Certificate Should Not Exist
 
 Secret Should Not Exist
     [Arguments]    ${secret_name}
-    ${secrets}=    Get Custom Resources    v1    Secret    ${REDIS_NAMESPACE}
+    ${secrets}=    Get Secrets    ${REDIS_NAMESPACE}
     ${secret_names}=    Create List
-    FOR    ${secret}    IN    @{secrets}
-        Append To List    ${secret_names}    ${secret}[metadata][name]
+    FOR    ${secret}    IN    @{secrets.items}
+        Append To List    ${secret_names}    ${secret.metadata.name}
     END
     Should Not Contain    ${secret_names}    ${secret_name}
