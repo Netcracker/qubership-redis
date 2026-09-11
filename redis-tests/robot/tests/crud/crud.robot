@@ -77,3 +77,4 @@ Test Delete DB Via Dbaas Adapter
     Sleep  10s
     Should Not Contain	${all_redis_deployments}  ${REDIS_HOST}
     Run Keyword If  '${REDIS_TLS_ENABLED}' == 'true'  Certificate Should Not Exist  ${REDIS_HOST}-certificate
+    Run Keyword If  '${REDIS_TLS_ENABLED}' == 'true'  Secret Should Not Exist  ${REDIS_HOST}-tls

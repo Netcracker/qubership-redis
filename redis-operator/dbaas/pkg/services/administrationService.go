@@ -71,6 +71,7 @@ var _ coreService.DbAdministration = &AdministrationService{}
 var (
 	credsSuffix        = "-credentials"
 	certSuffix         = "-certificate"
+	tlsSecretSuffix    = fmt.Sprintf(common.TLSSecretNamePattern, "")
 	regexpExpression   = "^[a-z][-a-z0-9]*[a-z0-9]?$"
 	nameRegexp, _      = regexp.Compile(regexpExpression)
 	redisPasswordConst = "REDIS_PASSWORD"
@@ -212,6 +213,19 @@ func (adminService *AdministrationService) getResourcesMapping(serviceName strin
 		object: &cm.Certificate{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      certName,
+				Namespace: adminService.namespace,
+			},
+		},
+	}
+	tlsSecretName := serviceName
+	if !strings.HasSuffix(serviceName, tlsSecretSuffix) {
+		tlsSecretName = fmt.Sprintf(common.TLSSecretNamePattern, serviceName)
+	}
+	mapping["TLSSecret"] = DBResourceMapping{
+		name: tlsSecretName,
+		object: &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      tlsSecretName,
 				Namespace: adminService.namespace,
 			},
 		},

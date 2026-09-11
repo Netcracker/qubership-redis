@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
@@ -29,6 +30,15 @@ var RedisContainerEntryPoint = []string{"/run_entry.sh"}
 
 var TLSSecretNamePattern = "%s-tls"
 
+// Must match the Issuer name defined in redis-tls-issuer.yaml.
+var RedisTLSIssuerName = "redis-tls-issuer"
+
+// main.go never registers the cert-manager scheme at startup, so it's done
+// here on first use instead - once per process, not once per call, since
+// UpdateCertificate runs on every reconcile for every existing database.
+var registerCertManagerScheme sync.Once
+var certManagerSchemeErr error
+
 func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, namespace string, kubeClient client.Client, runtimeScheme *runtime.Scheme) error {
 	if !tlsEnabled {
 		return nil
@@ -36,10 +46,11 @@ func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, 
 
 	certificateTemplate := GetCertificateTemplate(logicalDatabaseName, namespace, clusterIssuerName)
 
-	err := cm.AddToScheme(runtimeScheme)
-
-	if err != nil {
-		return err
+	registerCertManagerScheme.Do(func() {
+		certManagerSchemeErr = cm.AddToScheme(runtimeScheme)
+	})
+	if certManagerSchemeErr != nil {
+		return certManagerSchemeErr
 	}
 
 	certifErr := core.CreateOrUpdateRuntimeObject(kubeClient, runtimeScheme, nil, certificateTemplate,
@@ -48,19 +59,6 @@ func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, 
 		return certifErr
 	}
 	return nil
-}
-
-func GetIssuerTemplate(dbName, namespace string) client.Object {
-	return &cm.Issuer{
-		TypeMeta: v1.TypeMeta{Kind: "Issuer"},
-		ObjectMeta: v1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-tls-issuer", dbName),
-			Namespace: namespace,
-		},
-		Spec: cm.IssuerSpec{
-			IssuerConfig: cm.IssuerConfig{SelfSigned: &cm.SelfSignedIssuer{}},
-		},
-	}
 }
 
 func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.Object {
@@ -74,7 +72,7 @@ func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.
 		}
 	} else {
 		ref = cmeta.ObjectReference{
-			Name:  "redis-tls-issuer",
+			Name:  RedisTLSIssuerName,
 			Kind:  "Issuer",
 			Group: "cert-manager.io",
 		}
@@ -89,8 +87,13 @@ func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.
 			SecretName: fmt.Sprintf(TLSSecretNamePattern, dbName),
 			Duration:   &v1.Duration{Duration: time.Duration(365*24) * time.Hour},
 			CommonName: "redis-cn",
-			DNSNames:   []string{fmt.Sprintf("%s.%s.svc", dbName, namespace)},
-			IsCA:       true,
+			// Both forms are listed so the cert is valid no matter which one the
+			// connecting client actually resolves.
+			DNSNames: []string{
+				fmt.Sprintf("%s.%s", dbName, namespace),
+				fmt.Sprintf("%s.%s.svc", dbName, namespace),
+			},
+			IsCA: true,
 			PrivateKey: &cm.CertificatePrivateKey{
 				Algorithm: cm.RSAKeyAlgorithm,
 				Encoding:  cm.PKCS1,

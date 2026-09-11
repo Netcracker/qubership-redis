@@ -7,11 +7,12 @@ import (
 
 	constants "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	v2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
+	"github.com/Netcracker/qubership-redis/redis-operator/common"
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/core"
 	v1 "k8s.io/api/apps/v1"
 	v13 "k8s.io/api/core/v1"
-	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -135,12 +136,8 @@ func GetRedisDeploymentTemplate(
 	}
 
 	if tls.Enabled {
-		var tlsSecretName string
-		if tls.ClusterIssuerName == "" {
-			tlsSecretName = "root-ca"
-		} else {
-			tlsSecretName = tls.CertificateSecretName
-		}
+		// Created by common.UpdateCertificate, always under this name.
+		tlsSecretName := fmt.Sprintf(common.TLSSecretNamePattern, name)
 		volProj := []v13.VolumeProjection{
 			v13.VolumeProjection{
 				Secret: &v13.SecretProjection{
