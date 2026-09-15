@@ -36,12 +36,6 @@ func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, 
 
 	certificateTemplate := GetCertificateTemplate(logicalDatabaseName, namespace, clusterIssuerName)
 
-	err := cm.AddToScheme(runtimeScheme)
-
-	if err != nil {
-		return err
-	}
-
 	certifErr := core.CreateOrUpdateRuntimeObject(kubeClient, runtimeScheme, nil, certificateTemplate,
 		v1.ObjectMeta{Name: certificateTemplate.GetName(), Namespace: certificateTemplate.GetNamespace()}, true)
 	if certifErr != nil {
