@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	cm "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	netcrackercomv1 "github.com/Netcracker/qubership-redis/redis-operator/api/v1"
 	netcrackercomv2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
 	"github.com/Netcracker/qubership-redis/redis-operator/controllers"
@@ -52,6 +53,7 @@ func init() {
 
 	utilruntime.Must(netcrackercomv2.AddToScheme(scheme))
 	utilruntime.Must(netcrackercomv1.AddToScheme(scheme))
+	utilruntime.Must(cm.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
