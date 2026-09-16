@@ -3,7 +3,6 @@ package common
 import (
 	"fmt"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/Netcracker/qubership-nosqldb-operator-core/pkg/core"
@@ -33,25 +32,12 @@ var TLSSecretNamePattern = "%s-tls"
 // Must match the Issuer name defined in redis-tls-issuer.yaml.
 var RedisTLSIssuerName = "redis-tls-issuer"
 
-// main.go never registers the cert-manager scheme at startup, so it's done
-// here on first use instead - once per process, not once per call, since
-// UpdateCertificate runs on every reconcile for every existing database.
-var registerCertManagerScheme sync.Once
-var certManagerSchemeErr error
-
 func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, namespace string, kubeClient client.Client, runtimeScheme *runtime.Scheme) error {
 	if !tlsEnabled {
 		return nil
 	}
 
 	certificateTemplate := GetCertificateTemplate(logicalDatabaseName, namespace, clusterIssuerName)
-
-	registerCertManagerScheme.Do(func() {
-		certManagerSchemeErr = cm.AddToScheme(runtimeScheme)
-	})
-	if certManagerSchemeErr != nil {
-		return certManagerSchemeErr
-	}
 
 	certifErr := core.CreateOrUpdateRuntimeObject(kubeClient, runtimeScheme, nil, certificateTemplate,
 		v1.ObjectMeta{Name: certificateTemplate.GetName(), Namespace: certificateTemplate.GetNamespace()}, true)
