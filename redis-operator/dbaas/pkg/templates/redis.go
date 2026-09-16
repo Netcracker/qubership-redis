@@ -7,7 +7,6 @@ import (
 
 	constants "github.com/Netcracker/qubership-nosqldb-operator-core/pkg/constants"
 	v2 "github.com/Netcracker/qubership-redis/redis-operator/api/v2"
-	"github.com/Netcracker/qubership-redis/redis-operator/common"
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/core"
 	v1 "k8s.io/api/apps/v1"
 	v13 "k8s.io/api/core/v1"
@@ -45,7 +44,7 @@ func GetRedisDeploymentTemplate(
 	redisImagePullPolicy v13.PullPolicy,
 	tls v2.TLS,
 	priorityClassName string, partOf, managedBy string,
-	secretName string) *v1.Deployment {
+	secretName string, tlsSecretName string) *v1.Deployment {
 	var r int32 = 1
 	probe := &v13.Probe{
 		ProbeHandler: v13.ProbeHandler{
@@ -136,8 +135,6 @@ func GetRedisDeploymentTemplate(
 	}
 
 	if tls.Enabled {
-		// Created by common.UpdateCertificate, always under this name.
-		tlsSecretName := fmt.Sprintf(common.TLSSecretNamePattern, name)
 		volProj := []v13.VolumeProjection{
 			v13.VolumeProjection{
 				Secret: &v13.SecretProjection{

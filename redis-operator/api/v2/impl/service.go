@@ -80,9 +80,7 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 					tolerations = cr.Spec.Policies.Tolerations
 				}
 
-				// Certificate must exist before the Deployment points at its secret name.
-				certErr := common.UpdateCertificate(spec.Spec.Redis.TLS.Enabled, spec.Spec.Redis.TLS.ClusterIssuerName, redisName, request.Namespace, kubeClient, runtimeScheme)
-				core.PanicError(certErr, log.Error, "Failed to update TLS certificate")
+				tlsSecretName := spec.Spec.Redis.TLS.CertificateSecretName
 
 				redisDC := templates.GetRedisDeploymentTemplate(redisName, request.Namespace, spec.Spec.Redis.DockerImage,
 					spec.Spec.Redis.Args,
@@ -98,6 +96,7 @@ func (r *RedisServiceBuilder) Build(ctx core.ExecutionContext) core.Executable {
 					spec.Spec.Redis.PriorityClassName,
 					spec.Spec.PartOf, spec.Spec.ManagedBy,
 					redisName+"-credentials",
+					tlsSecretName,
 				)
 
 				var updateErr error

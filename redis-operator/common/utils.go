@@ -29,9 +29,6 @@ var RedisContainerEntryPoint = []string{"/run_entry.sh"}
 
 var TLSSecretNamePattern = "%s-tls"
 
-// Must match the Issuer name defined in redis-tls-issuer.yaml.
-var RedisTLSIssuerName = "redis-tls-issuer"
-
 func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, namespace string, kubeClient client.Client, runtimeScheme *runtime.Scheme) error {
 	if !tlsEnabled {
 		return nil
@@ -58,7 +55,8 @@ func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.
 		}
 	} else {
 		ref = cmeta.ObjectReference{
-			Name:  RedisTLSIssuerName,
+			// Must match the Issuer name defined in redis-tls-issuer.yaml.
+			Name:  "redis-tls-issuer",
 			Kind:  "Issuer",
 			Group: "cert-manager.io",
 		}

@@ -410,6 +410,8 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 
 	envs := common.GetRedisEnvs(adminService.tls.TLS)
 
+	tlsSecretName := fmt.Sprintf(common.TLSSecretNamePattern, logicalDatabaseName)
+
 	// The Redis Deployment
 	redisDeployment := templates.GetRedisDeploymentTemplate(
 		logicalDatabaseName,
@@ -429,6 +431,7 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 		adminService.partOf,
 		adminService.managedBy,
 		credsSecretName,
+		tlsSecretName,
 	)
 
 	objectsToCreate = append(objectsToCreate, objectToCreate{redisDeployment, &redisDeployment.ObjectMeta})

@@ -25,7 +25,7 @@ func TestGetCertificateTemplate_SAN(t *testing.T) {
 			namespace:      "myns",
 			wantDNSNames:   []string{"mydb.myns", "mydb.myns.svc"},
 			wantIssuerKind: "Issuer",
-			wantIssuerName: RedisTLSIssuerName,
+			wantIssuerName: "redis-tls-issuer",
 		},
 		{
 			name:              "external cluster issuer",
