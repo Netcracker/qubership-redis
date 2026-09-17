@@ -93,6 +93,8 @@ func (r *RedisBuilder) Build(ctx core.ExecutionContext) core.Executable {
 				tolerations = cr.Spec.Policies.Tolerations
 			}
 
+			tlsSecretName := redisSpec.TLS.CertificateSecretName
+
 			envs := common.GetRedisEnvs(redisSpec.TLS.TLS)
 			deployment := templates.GetRedisDeploymentTemplate(
 				core2.Redis,
@@ -110,6 +112,7 @@ func (r *RedisBuilder) Build(ctx core.ExecutionContext) core.Executable {
 				spec.Spec.Redis.TLS,
 				spec.Spec.Redis.PriorityClassName, spec.Spec.PartOf, spec.Spec.ManagedBy,
 				redisSpec.SecretName,
+				tlsSecretName,
 			)
 
 			delErr := helperImpl.DeleteDeploymentAndPods(deployment.Name, request.Namespace, cr.Spec.WaitTimeout)

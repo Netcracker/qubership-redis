@@ -44,19 +44,6 @@ func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, 
 	return nil
 }
 
-func GetIssuerTemplate(dbName, namespace string) client.Object {
-	return &cm.Issuer{
-		TypeMeta: v1.TypeMeta{Kind: "Issuer"},
-		ObjectMeta: v1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-tls-issuer", dbName),
-			Namespace: namespace,
-		},
-		Spec: cm.IssuerSpec{
-			IssuerConfig: cm.IssuerConfig{SelfSigned: &cm.SelfSignedIssuer{}},
-		},
-	}
-}
-
 func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.Object {
 
 	var ref cmeta.ObjectReference
@@ -68,6 +55,7 @@ func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.
 		}
 	} else {
 		ref = cmeta.ObjectReference{
+			// Must match the Issuer name defined in redis-tls-issuer.yaml.
 			Name:  "redis-tls-issuer",
 			Kind:  "Issuer",
 			Group: "cert-manager.io",
@@ -83,8 +71,13 @@ func GetCertificateTemplate(dbName, namespace, clusterIssuerName string) client.
 			SecretName: fmt.Sprintf(TLSSecretNamePattern, dbName),
 			Duration:   &v1.Duration{Duration: time.Duration(365*24) * time.Hour},
 			CommonName: "redis-cn",
-			DNSNames:   []string{fmt.Sprintf("%s.%s.svc", dbName, namespace)},
-			IsCA:       true,
+			// Both forms are listed so the cert is valid no matter which one the
+			// connecting client actually resolves.
+			DNSNames: []string{
+				fmt.Sprintf("%s.%s", dbName, namespace),
+				fmt.Sprintf("%s.%s.svc", dbName, namespace),
+			},
+			IsCA: true,
 			PrivateKey: &cm.CertificatePrivateKey{
 				Algorithm: cm.RSAKeyAlgorithm,
 				Encoding:  cm.PKCS1,

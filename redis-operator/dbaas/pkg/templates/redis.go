@@ -10,8 +10,8 @@ import (
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/core"
 	v1 "k8s.io/api/apps/v1"
 	v13 "k8s.io/api/core/v1"
-	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -44,7 +44,7 @@ func GetRedisDeploymentTemplate(
 	redisImagePullPolicy v13.PullPolicy,
 	tls v2.TLS,
 	priorityClassName string, partOf, managedBy string,
-	secretName string) *v1.Deployment {
+	secretName string, tlsSecretName string) *v1.Deployment {
 	var r int32 = 1
 	probe := &v13.Probe{
 		ProbeHandler: v13.ProbeHandler{
@@ -135,12 +135,6 @@ func GetRedisDeploymentTemplate(
 	}
 
 	if tls.Enabled {
-		var tlsSecretName string
-		if tls.ClusterIssuerName == "" {
-			tlsSecretName = "root-ca"
-		} else {
-			tlsSecretName = tls.CertificateSecretName
-		}
 		volProj := []v13.VolumeProjection{
 			v13.VolumeProjection{
 				Secret: &v13.SecretProjection{

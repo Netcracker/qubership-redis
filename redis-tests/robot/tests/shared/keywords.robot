@@ -98,10 +98,10 @@ Get DB Via Dbaas Adapter
 
 Delete DB Via Dbaas Adapter
     [Arguments]    ${redis_host}
-    ${certificate_resource}=    Set Variable If    '${REDIS_TLS_ENABLED}' == 'true'
-    ...    ,{"kind":"Certificate","name":"${redis_host}-certificate"}    ${EMPTY}
+    ${tls_resources}=    Set Variable If    '${REDIS_TLS_ENABLED}' == 'true'
+    ...    ,{"kind":"Certificate","name":"${redis_host}-certificate"},{"kind":"TLSSecret","name":"${redis_host}-tls"}    ${EMPTY}
     ${data}=    Catenate    SEPARATOR=
-    ...    [{"kind":"Deployment","name":"${redis_host}"},{"kind":"Service","name":"${redis_host}"},{"kind":"ConfigMap","name":"${redis_host}"},{"kind":"Secret","name":"${redis_host}-credentials"}${certificate_resource}]
+    ...    [{"kind":"Deployment","name":"${redis_host}"},{"kind":"Service","name":"${redis_host}"},{"kind":"ConfigMap","name":"${redis_host}"},{"kind":"Secret","name":"${redis_host}-credentials"}${tls_resources}]
     ${resp}=    POST On Session
     ...    dbaassession
     ...    url=/api/${dbaas_api_version}/dbaas/adapter/redis/resources/bulk-drop
@@ -117,3 +117,12 @@ Certificate Should Not Exist
         Append To List    ${certificate_names}    ${certificate}[metadata][name]
     END
     Should Not Contain    ${certificate_names}    ${certificate_name}
+
+Secret Should Not Exist
+    [Arguments]    ${secret_name}
+    ${secrets}=    Get Secrets    ${REDIS_NAMESPACE}
+    ${secret_names}=    Create List
+    FOR    ${secret}    IN    @{secrets.items}
+        Append To List    ${secret_names}    ${secret.metadata.name}
+    END
+    Should Not Contain    ${secret_names}    ${secret_name}
