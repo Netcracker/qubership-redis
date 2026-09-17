@@ -26,7 +26,7 @@ Redis alert names identify the resource category directly (e.g. `Redis Node Down
 `High Redis CPU Usage`). Use the alert name to target the right component for logs
 and metrics rather than inspecting all pods:
 
-- **Node / pod availability** → `kubectl get pods -n <namespace> -l app=redis`
-- **CPU / memory / latency** → `kubectl top pod -n <namespace> -l app=redis`
-- **Metrics collection failure** → `redis-monitoring-agent` pod logs
-- **Operator / reconciliation** → `dbaas-redis-operator` pod logs
+- **Node / pod availability** → Redis pod status and restart/OOM events (request artifact if not provided)
+- **CPU / memory / latency** → Redis pod resource utilization metrics (request artifact if not provided)
+- **Metrics collection failure** → `redis-monitoring-agent` pod logs (request artifact if not provided)
+- **Operator / reconciliation** → `dbaas-redis-operator` pod logs (request artifact if not provided)

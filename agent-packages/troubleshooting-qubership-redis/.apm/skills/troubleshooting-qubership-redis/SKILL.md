@@ -1,6 +1,6 @@
 ---
 name: troubleshooting-qubership-redis
-description: Diagnose and resolve Redis node down alerts, high CPU/memory/latency/connections alerts, ArgoCD rollback stuck on DbaasRedisAdapter, DBaaS Redis provisioning failures, Disaster Recovery switchover issues, and redis-operator reconciliation failures. Match the reported symptom to the documented troubleshooting section; fall back to a general diagnostic checklist when no specific match exists.
+description: Diagnose and resolve Redis node down alerts, high CPU/memory/latency/connections alerts, ArgoCD rollback stuck on DbaasRedisAdapter, DBaaS Redis provisioning failures, Disaster Recovery switchover issues, redis-operator reconciliation failures, and failed robot integration tests. Match the reported symptom to the documented troubleshooting section; fall back to a general diagnostic checklist when no specific match exists.
 ---
 
 ## How to use the reference file
@@ -19,6 +19,12 @@ description: Diagnose and resolve Redis node down alerts, high CPU/memory/latenc
 | Alert: "Latency on a Redis Node is More than N ms" | Latency on a Redis Node |
 | Alert: "High Redis CPU Usage" / slow commands / SLOWLOG | High Redis CPU Usage |
 | Alert: "High Redis Memory Usage" / OOMKilled Redis pod | High Redis Memory Usage |
+| `robot-tests` pod/deployment failed / operator reports `RobotTests failed` | Troubleshooting Robot Integration Tests |
+
+## Robot integration tests failure
+
+If the failing component is the `robot-tests` pod/deployment, load
+`references/robot-tests.md` instead of `references/troubleshooting.md`.
 
 ## Alert name → service component
 
@@ -26,7 +32,7 @@ Redis alert names identify the resource category directly (e.g. `Redis Node Down
 `High Redis CPU Usage`). Use the alert name to target the right component for logs
 and metrics rather than inspecting all pods:
 
-- **Node / pod availability** → `kubectl get pods -n <namespace> -l app=redis`
-- **CPU / memory / latency** → `kubectl top pod -n <namespace> -l app=redis`
-- **Metrics collection failure** → `redis-monitoring-agent` pod logs
-- **Operator / reconciliation** → `dbaas-redis-operator` pod logs
+- **Node / pod availability** → Redis pod status and restart/OOM events (request artifact if not provided)
+- **CPU / memory / latency** → Redis pod resource utilization metrics (request artifact if not provided)
+- **Metrics collection failure** → `redis-monitoring-agent` pod logs (request artifact if not provided)
+- **Operator / reconciliation** → `dbaas-redis-operator` pod logs (request artifact if not provided)
