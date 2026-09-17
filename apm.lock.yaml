@@ -1,0 +1,52 @@
+lockfile_version: '1'
+generated_at: '2026-09-17T06:23:07.157431+00:00'
+apm_version: 0.24.0
+dependencies:
+- repo_url: Netcracker/qubership-ai-packages
+  name: apm-authoring
+  host: github.com
+  resolved_commit: 0e384f374d05bf6dc1900f518312db62e71b71f4
+  version: 1.0.0
+  virtual_path: agent-packages/apm-authoring
+  is_virtual: true
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/apm-authoring
+  - .agents/skills/apm-authoring/SKILL.md
+  - .claude/rules/apm-authoring.md
+  - .cursor/rules/apm-authoring.mdc
+  - .github/instructions/apm-authoring.instructions.md
+  deployed_file_hashes:
+    .agents/skills/apm-authoring/SKILL.md: sha256:1832abc93a14884504dc87d97cc0c2825c7e7b4a6786f2daccf1d6ef172bc907
+    .claude/rules/apm-authoring.md: sha256:5c4185d3d69333a810c01f5e26a8ea46b033e7082a21f1551433d6c97d8a24a2
+    .cursor/rules/apm-authoring.mdc: sha256:fbc8f94d4f0b94c04a0ed042ee06f1f48244fdac316f0ce15e2d38b0affbb9aa
+    .github/instructions/apm-authoring.instructions.md: sha256:9ae7ddb9835b7074edd9d3e7f6df95426941ce6024b35b0d17aeb5d77322a4ce
+  content_hash: sha256:1d731d0a26376eda0b82629e6e1cff1b41dfeae13fe8d7e5debb24a1699ea4a8
+  is_dev: true
+- repo_url: _local/troubleshooting-qubership-redis
+  name: troubleshooting-qubership-redis
+  version: 1.0.0
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/troubleshooting-qubership-redis
+  - .agents/skills/troubleshooting-qubership-redis/SKILL.md
+  - .agents/skills/troubleshooting-qubership-redis/references
+  - .agents/skills/troubleshooting-qubership-redis/references/troubleshooting.md
+  - .claude/rules/troubleshooting-qubership-redis.md
+  - .claude/skills/troubleshooting-qubership-redis
+  - .claude/skills/troubleshooting-qubership-redis/SKILL.md
+  - .claude/skills/troubleshooting-qubership-redis/references
+  - .claude/skills/troubleshooting-qubership-redis/references/troubleshooting.md
+  - .cursor/rules/troubleshooting-qubership-redis.mdc
+  - .github/instructions/troubleshooting-qubership-redis.instructions.md
+  deployed_file_hashes:
+    .agents/skills/troubleshooting-qubership-redis/SKILL.md: sha256:bba7bdf137625c9484cc6f1e09151702135ff310906c5981214d43a7d96ea105
+    .agents/skills/troubleshooting-qubership-redis/references/troubleshooting.md: sha256:85f67428a4a18bd0051c5c7c06cd27fd5563743a367c9aa9c752e5067b97a809
+    .claude/rules/troubleshooting-qubership-redis.md: sha256:a104cb113685656e46e0cf1c5873b2e572a18d2ac8d88bef20bf9a04a73a3ecd
+    .claude/skills/troubleshooting-qubership-redis/SKILL.md: sha256:bba7bdf137625c9484cc6f1e09151702135ff310906c5981214d43a7d96ea105
+    .claude/skills/troubleshooting-qubership-redis/references/troubleshooting.md: sha256:85f67428a4a18bd0051c5c7c06cd27fd5563743a367c9aa9c752e5067b97a809
+    .cursor/rules/troubleshooting-qubership-redis.mdc: sha256:2bb0f4856e08d7cf85c6c0f009f379522effb7ef5922508adcd018088e448b85
+    .github/instructions/troubleshooting-qubership-redis.instructions.md: sha256:6cbf5ccddb9cebe527a686d4f5a3f627e824e129a8cbe56f9fbe616fe1846ffb
+  source: local
+  local_path: ./agent-packages/troubleshooting-qubership-redis/
+  is_dev: true
