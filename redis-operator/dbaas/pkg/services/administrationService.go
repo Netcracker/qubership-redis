@@ -204,31 +204,33 @@ func (adminService *AdministrationService) getResourcesMapping(serviceName strin
 			},
 		},
 	}
-	certName := serviceName
-	if !strings.HasSuffix(serviceName, certSuffix) {
-		certName = serviceName + certSuffix
-	}
-	mapping["Certificate"] = DBResourceMapping{
-		name: certName,
-		object: &cm.Certificate{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      certName,
-				Namespace: adminService.namespace,
+	if adminService.tls.Enabled {
+		certName := serviceName
+		if !strings.HasSuffix(serviceName, certSuffix) {
+			certName = serviceName + certSuffix
+		}
+		mapping["Certificate"] = DBResourceMapping{
+			name: certName,
+			object: &cm.Certificate{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      certName,
+					Namespace: adminService.namespace,
+				},
 			},
-		},
-	}
-	tlsSecretName := serviceName
-	if !strings.HasSuffix(serviceName, tlsSecretSuffix) {
-		tlsSecretName = fmt.Sprintf(common.TLSSecretNamePattern, serviceName)
-	}
-	mapping["TLSSecret"] = DBResourceMapping{
-		name: tlsSecretName,
-		object: &v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      tlsSecretName,
-				Namespace: adminService.namespace,
+		}
+		tlsSecretName := serviceName
+		if !strings.HasSuffix(serviceName, tlsSecretSuffix) {
+			tlsSecretName = fmt.Sprintf(common.TLSSecretNamePattern, serviceName)
+		}
+		mapping["TLSSecret"] = DBResourceMapping{
+			name: tlsSecretName,
+			object: &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      tlsSecretName,
+					Namespace: adminService.namespace,
+				},
 			},
-		},
+		}
 	}
 	return mapping
 }
@@ -381,7 +383,11 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 
 	var objectsToCreate []objectToCreate
 
-	certErr := common.UpdateCertificate(adminService.tls.Enabled, adminService.tls.ClusterIssuerName, logicalDatabaseName, adminService.namespace, adminService.kubeClient, adminService.runtimeScheme)
+	var certOwner client.Object
+	if adminService.owner != nil {
+		certOwner = adminService.owner
+	}
+	certErr := common.UpdateCertificate(adminService.tls.Enabled, adminService.tls.ClusterIssuerName, logicalDatabaseName, adminService.namespace, adminService.kubeClient, adminService.runtimeScheme, certOwner)
 	core.PanicError(certErr, logger.Error, "Failed to update TLS certificate")
 
 	// Making secret for pass
@@ -585,7 +591,17 @@ func (adminService *AdministrationService) DropResources(ctx context.Context, re
 		resourceKind := resource.Kind
 		resourceName := resource.Name
 
-		obj := adminService.getResourcesMapping(resourceName)[resourceKind]
+		obj, known := adminService.getResourcesMapping(resourceName)[resourceKind]
+		if !known || obj.object == nil {
+			if !adminService.tls.Enabled && (resourceKind == "Certificate" || resourceKind == "TLSSecret") {
+				logger.Info(fmt.Sprintf("TLS is disabled, resource %s was never created for \"%s\", skipping deletion", resourceKind, resourceName))
+			} else {
+				logger.Warn(fmt.Sprintf("Unknown resource kind \"%s\" for \"%s\", skipping deletion", resourceKind, resourceName))
+			}
+			resource.Status = dao.DELETED
+			dropStatuses = append(dropStatuses, resource)
+			continue
+		}
 
 		err := core.DeleteRuntimeObject(adminService.kubeClient, obj.object)
 

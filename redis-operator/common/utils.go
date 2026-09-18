@@ -14,6 +14,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -29,12 +30,18 @@ var RedisContainerEntryPoint = []string{"/run_entry.sh"}
 
 var TLSSecretNamePattern = "%s-tls"
 
-func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, namespace string, kubeClient client.Client, runtimeScheme *runtime.Scheme) error {
+func UpdateCertificate(tlsEnabled bool, clusterIssuerName, logicalDatabaseName, namespace string, kubeClient client.Client, runtimeScheme *runtime.Scheme, owner client.Object) error {
 	if !tlsEnabled {
 		return nil
 	}
 
 	certificateTemplate := GetCertificateTemplate(logicalDatabaseName, namespace, clusterIssuerName)
+
+	if owner != nil {
+		if err := controllerutil.SetControllerReference(owner, certificateTemplate, runtimeScheme); err != nil {
+			return err
+		}
+	}
 
 	certifErr := core.CreateOrUpdateRuntimeObject(kubeClient, runtimeScheme, nil, certificateTemplate,
 		v1.ObjectMeta{Name: certificateTemplate.GetName(), Namespace: certificateTemplate.GetNamespace()}, true)

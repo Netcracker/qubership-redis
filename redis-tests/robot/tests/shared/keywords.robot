@@ -44,6 +44,8 @@ Create DB Via Dbaas Adapter
     ...    headers=${headers}
     Sleep    10s
     Should Be Equal As Strings    ${resp.status_code}    201
+    ${response_json}=    Set Variable    ${resp.json()}
+    Set Suite Variable    ${REDIS_DB_RESOURCES}    ${response_json}[resources]
     ${deployment_name}=    Get Deployment Entity Names For Service
     ...    ${REDIS_NAMESPACE}
     ...    test-${redis_db_name}
@@ -97,15 +99,10 @@ Get DB Via Dbaas Adapter
     Should Contain    str(${resp.content})    ${redis_host}
 
 Delete DB Via Dbaas Adapter
-    [Arguments]    ${redis_host}
-    ${tls_resources}=    Set Variable If    '${REDIS_TLS_ENABLED}' == 'true'
-    ...    ,{"kind":"Certificate","name":"${redis_host}-certificate"},{"kind":"TLSSecret","name":"${redis_host}-tls"}    ${EMPTY}
-    ${data}=    Catenate    SEPARATOR=
-    ...    [{"kind":"Deployment","name":"${redis_host}"},{"kind":"Service","name":"${redis_host}"},{"kind":"ConfigMap","name":"${redis_host}"},{"kind":"Secret","name":"${redis_host}-credentials"}${tls_resources}]
     ${resp}=    POST On Session
     ...    dbaassession
     ...    url=/api/${dbaas_api_version}/dbaas/adapter/redis/resources/bulk-drop
-    ...    data=${data}
+    ...    json=${REDIS_DB_RESOURCES}
     ...    headers=${headers}
     Should Be Equal As Strings    ${resp.status_code}    200
 
