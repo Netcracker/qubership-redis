@@ -238,6 +238,11 @@ func (adminService *AdministrationService) getDBResources(serviceName string) []
 	resMapping := adminService.getResourcesMapping(serviceName)
 	var result []dao.DbResource
 	for kind, val := range resMapping {
+		// getResourcesMapping always includes Certificate/TLSSecret so DropResources can still
+		// look them up by name later; only registration at creation time is TLS-gated here.
+		if !adminService.tls.Enabled && (kind == "Certificate" || kind == "TLSSecret") {
+			continue
+		}
 		result = append(result, dao.DbResource{Kind: kind, Name: val.name})
 	}
 	return result
@@ -381,7 +386,11 @@ func (adminService *AdministrationService) CreateDatabase(ctx context.Context, r
 
 	var objectsToCreate []objectToCreate
 
-	certErr := common.UpdateCertificate(adminService.tls.Enabled, adminService.tls.ClusterIssuerName, logicalDatabaseName, adminService.namespace, adminService.kubeClient, adminService.runtimeScheme)
+	var certOwner client.Object
+	if adminService.owner != nil {
+		certOwner = adminService.owner
+	}
+	certErr := common.UpdateCertificate(adminService.tls.Enabled, adminService.tls.ClusterIssuerName, logicalDatabaseName, adminService.namespace, adminService.kubeClient, adminService.runtimeScheme, certOwner)
 	core.PanicError(certErr, logger.Error, "Failed to update TLS certificate")
 
 	// Making secret for pass
@@ -585,7 +594,13 @@ func (adminService *AdministrationService) DropResources(ctx context.Context, re
 		resourceKind := resource.Kind
 		resourceName := resource.Name
 
-		obj := adminService.getResourcesMapping(resourceName)[resourceKind]
+		obj, known := adminService.getResourcesMapping(resourceName)[resourceKind]
+		if !known || obj.object == nil {
+			logger.Warn(fmt.Sprintf("Unknown resource kind \"%s\" for \"%s\", skipping deletion", resourceKind, resourceName))
+			resource.Status = dao.DELETED
+			dropStatuses = append(dropStatuses, resource)
+			continue
+		}
 
 		err := core.DeleteRuntimeObject(adminService.kubeClient, obj.object)
 
