@@ -18,7 +18,6 @@ rules:
   - update
   - watch
   - delete
-{{- if and .Values.redis.tls.enabled (or .Values.redis.tls.generateCerts.enabled .Values.redis.tls.generateCerts.clusterIssuerName) }}
 - apiGroups:
   - cert-manager.io
   resources:
@@ -30,7 +29,6 @@ rules:
   - list
   - update
   - delete
-{{- end }}
 - apiGroups:
   - ""
   resources:

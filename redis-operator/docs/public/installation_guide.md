@@ -418,23 +418,6 @@ To enable TLS, set the `redis.tls.enabled` parameter to "true".
 TLS port can be set in the `redis.tls.tlsPort` parameter. By default, it is set to "6379".
 
 To enable automatic certificate generation with Cert Manager, set the `redis.tls.generateCerts.enabled` parameter to "true" and specify `ClusterIssuer` name in `redis.tls.generateCerts.clusterIssuerName`.
-не The chart grants dbaas-redis-operator the following role when `redis.tls.enabled` is "true" and either `redis.tls.generateCerts.enabled` is "true" or `redis.tls.generateCerts.clusterIssuerName` is set (see `role.yaml`):
-
-```
-- apiGroups:
-  - cert-manager.io
-  resources:
-  - '*'
-  verbs:
-  - watch
-  - create
-  - get
-  - list
-  - update
-  - delete
-```
-
-This role must be bound to the deployer service account.
 
 If `redis.tls.generateCerts.clusterIssuerName` is empty, the chart uses its own built-in self-signed
 Issuer (`redis-tls-issuer`): each logical database gets its own independently self-signed certificate.

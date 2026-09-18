@@ -204,33 +204,31 @@ func (adminService *AdministrationService) getResourcesMapping(serviceName strin
 			},
 		},
 	}
-	if adminService.tls.Enabled {
-		certName := serviceName
-		if !strings.HasSuffix(serviceName, certSuffix) {
-			certName = serviceName + certSuffix
-		}
-		mapping["Certificate"] = DBResourceMapping{
-			name: certName,
-			object: &cm.Certificate{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      certName,
-					Namespace: adminService.namespace,
-				},
+	certName := serviceName
+	if !strings.HasSuffix(serviceName, certSuffix) {
+		certName = serviceName + certSuffix
+	}
+	mapping["Certificate"] = DBResourceMapping{
+		name: certName,
+		object: &cm.Certificate{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      certName,
+				Namespace: adminService.namespace,
 			},
-		}
-		tlsSecretName := serviceName
-		if !strings.HasSuffix(serviceName, tlsSecretSuffix) {
-			tlsSecretName = fmt.Sprintf(common.TLSSecretNamePattern, serviceName)
-		}
-		mapping["TLSSecret"] = DBResourceMapping{
-			name: tlsSecretName,
-			object: &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      tlsSecretName,
-					Namespace: adminService.namespace,
-				},
+		},
+	}
+	tlsSecretName := serviceName
+	if !strings.HasSuffix(serviceName, tlsSecretSuffix) {
+		tlsSecretName = fmt.Sprintf(common.TLSSecretNamePattern, serviceName)
+	}
+	mapping["TLSSecret"] = DBResourceMapping{
+		name: tlsSecretName,
+		object: &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      tlsSecretName,
+				Namespace: adminService.namespace,
 			},
-		}
+		},
 	}
 	return mapping
 }
@@ -240,6 +238,11 @@ func (adminService *AdministrationService) getDBResources(serviceName string) []
 	resMapping := adminService.getResourcesMapping(serviceName)
 	var result []dao.DbResource
 	for kind, val := range resMapping {
+		// getResourcesMapping always includes Certificate/TLSSecret so DropResources can still
+		// look them up by name later; only registration at creation time is TLS-gated here.
+		if !adminService.tls.Enabled && (kind == "Certificate" || kind == "TLSSecret") {
+			continue
+		}
 		result = append(result, dao.DbResource{Kind: kind, Name: val.name})
 	}
 	return result
@@ -593,11 +596,7 @@ func (adminService *AdministrationService) DropResources(ctx context.Context, re
 
 		obj, known := adminService.getResourcesMapping(resourceName)[resourceKind]
 		if !known || obj.object == nil {
-			if !adminService.tls.Enabled && (resourceKind == "Certificate" || resourceKind == "TLSSecret") {
-				logger.Info(fmt.Sprintf("TLS is disabled, resource %s was never created for \"%s\", skipping deletion", resourceKind, resourceName))
-			} else {
-				logger.Warn(fmt.Sprintf("Unknown resource kind \"%s\" for \"%s\", skipping deletion", resourceKind, resourceName))
-			}
+			logger.Warn(fmt.Sprintf("Unknown resource kind \"%s\" for \"%s\", skipping deletion", resourceKind, resourceName))
 			resource.Status = dao.DELETED
 			dropStatuses = append(dropStatuses, resource)
 			continue
