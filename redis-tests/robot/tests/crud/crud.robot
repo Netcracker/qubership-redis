@@ -72,7 +72,7 @@ Test Get DB Via Dbaas Adapter
 Test Delete DB Via Dbaas Adapter
     [Tags]  redis  smoke  dbaas
     Skip If  '${DBAAS_ENABLED}' == 'false'  Redis Dbaas is not enabled. Skip test.
-    Delete DB Via Dbaas Adapter  ${REDIS_HOST}
+    Delete DB Via Dbaas Adapter
     ${all_redis_deployments}=  Get Deployment Entity Names For Service  ${REDIS_NAMESPACE}  ${REDIS_HOST}  label_name=name
     Sleep  10s
     Should Not Contain	${all_redis_deployments}  ${REDIS_HOST}
