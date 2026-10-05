@@ -1,24 +1,38 @@
 ---
 name: troubleshooting-qubership-redis
-description: Diagnose and resolve Redis node down alerts, high CPU/memory/latency/connections alerts, ArgoCD rollback stuck on DbaasRedisAdapter, DBaaS Redis provisioning failures, Disaster Recovery switchover issues, redis-operator reconciliation failures, and failed robot integration tests. Match the reported symptom to the documented troubleshooting section; fall back to a general diagnostic checklist when no specific match exists.
+description: "Diagnose and resolve Redis issues in qubership-redis: Node Down alerts, high CPU/memory/latency/connections alerts, ArgoCD rollback stuck on DbaasRedisAdapter, DBaaS Redis provisioning failures, Disaster Recovery switchover issues, redis-operator reconciliation failures, and failed robot integration tests. Use this skill whenever the user reports any Redis problem, alert, or unexpected behavior — even without a named alert. Always start with logs and events, then match to reference sections."
 ---
+
+## Diagnostic flow (always follow this order)
+
+1. **Analyze provided logs and events first** — before looking anything up in references. Read all attached files. Look for:
+   - Redis Operator logs — errors, reconciliation failures, panics
+   - Redis instance events — status conditions, last transitions
+   - Redis pod logs — crashes, OOM, connection errors
+   - Monitoring agent logs — scrape failures, config errors
+
+2. **Identify symptom** — match what you see in logs/events to the table below
+
+3. **Read the reference section** — load only the matching section from `references/troubleshooting.md`
 
 ## How to use the reference file
 
-1. Grep issue headers:
-   `grep -n "^## " references/troubleshooting.md`
-2. Read only the matching section: offset at its line number, limit through to the next header's line number. Never load the whole file for one lookup.
+Load only the relevant section — do NOT read the full file.
+
+1. Grep section headers: `grep -n "^## " references/troubleshooting.md`
+2. Match symptom to section
+3. Read only that section using `offset` and `limit`
 
 ## Symptom → reference section
 
 | Symptom | Section in references/troubleshooting.md |
 |---|---|
-| ArgoCD rollback stuck / `DbaasRedisAdapter` not reconciling | Race Condition in ArgoCD Rolling Updates |
 | Alert: "Redis Node Down" / monitoring cannot collect metrics | Redis Node Down Incident Report |
 | Alert: "Connections Count to a Redis Node is More Than N% of the Limit" | Connections Count to a Redis Node |
 | Alert: "Latency on a Redis Node is More than N ms" | Latency on a Redis Node |
 | Alert: "High Redis CPU Usage" / slow commands / SLOWLOG | High Redis CPU Usage |
 | Alert: "High Redis Memory Usage" / OOMKilled Redis pod | High Redis Memory Usage |
+| ArgoCD rollback stuck / `DbaasRedisAdapter` not reconciling | Race Condition in ArgoCD Rolling Updates |
 | `robot-tests` pod/deployment failed / operator reports `RobotTests failed` | Troubleshooting Robot Integration Tests |
 
 ## Robot integration tests failure
@@ -28,11 +42,22 @@ If the failing component is the `robot-tests` pod/deployment, load
 
 ## Alert name → service component
 
-Redis alert names identify the resource category directly (e.g. `Redis Node Down`,
-`High Redis CPU Usage`). Use the alert name to target the right component for logs
-and metrics rather than inspecting all pods:
+Use alert name to target the right component for logs and metrics:
 
-- **Node / pod availability** → Redis pod status and restart/OOM events (request artifact if not provided)
-- **CPU / memory / latency** → Redis pod resource utilization metrics (request artifact if not provided)
-- **Metrics collection failure** → `redis-monitoring-agent` pod logs (request artifact if not provided)
-- **Operator / reconciliation** → `dbaas-redis-operator` pod logs (request artifact if not provided)
+- **Node / pod availability** → Redis pod status and restart/OOM events
+- **CPU / memory / latency** → Redis pod resource utilization metrics
+- **Metrics collection failure** → `redis-monitoring-agent` pod logs
+- **Operator / reconciliation** → `dbaas-redis-operator` pod logs
+
+## General diagnostic checklist (no alert / no reference match)
+
+When no alert name is given and no section matches, work through this checklist:
+
+1. **Operator health** — is `dbaas-redis-operator` running and not crash-looping?
+2. **CRD status** — check `DbaasRedisAdapter` `.status.conditions`
+3. **Recent events** — look for Redis-related events sorted by timestamp
+4. **Redis pod health** — are pods Running? any restarts?
+5. **Resource pressure** — OOMKilled or CPU throttling in pod describe output?
+6. **Reconciliation errors** — grep operator logs for `ERROR` or `reconcile`
+7. **DBaaS aggregator** — if provisioning path: check aggregator connectivity and credentials secret
+8. **DR state** — if Disaster Recovery mode: check replication lag and `ClusterReplicator` status
