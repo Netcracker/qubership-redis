@@ -1,0 +1,18 @@
+---
+
+# Charts release configuration file
+# This file is used to update the version of the helm charts and images in the values.yaml file
+# It is used in the helm-charts-release action
+# ${release} is replaced with the release version provided in the workflow
+
+charts:
+  - name: qubership-redis-operator
+    chart_file: redis-operator/charts/helm/redis-operator/Chart.yaml
+    values_file: redis-operator/charts/helm/redis-operator/values.yaml
+    image:
+      - ghcr.io/netcracker/qubership-redis-operator:${release}
+      - ghcr.io/netcracker/qubership-redis-monitoring-agent:${release}
+      - ghcr.io/netcracker/qubership-redis-tests:${release}
+      - ghcr.io/netcracker/qubership-redis-transfer:${release}
+      - ghcr.io/netcracker/qubership-docker-redis-7:${release}
+      - ghcr.io/netcracker/qubership-docker-redis-8:${release}
