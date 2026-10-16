@@ -217,6 +217,12 @@ func (r *TelegrafMonitoringService) updateTelegrafConfAndEnvironmentVariables(re
 		resultRaw = append(resultRaw, inputs)
 	}
 
+	if len(redisConfMap) == 0 {
+		//telegraf requires at least one input plugin to start; inputs.internal only reports
+		//telegraf's own runtime stats and needs no redis connection, keeping :9273 up with zero instances
+		resultRaw = append(resultRaw, "[[inputs.internal]]")
+	}
+
 	result := strings.Join(resultRaw, "\n")
 
 	r.logger.Debug(fmt.Sprintln("Telegraf configuration result: \n" + result))
