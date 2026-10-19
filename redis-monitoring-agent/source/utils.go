@@ -217,6 +217,12 @@ func (r *TelegrafMonitoringService) updateTelegrafConfAndEnvironmentVariables(re
 		resultRaw = append(resultRaw, inputs)
 	}
 
+	if len(redisConfMap) == 0 {
+		//telegraf requires at least one input plugin to start; inputs.internal only reports
+		//telegraf's own runtime stats and needs no redis connection, keeping :9273 up with zero instances
+		resultRaw = append(resultRaw, "[[inputs.internal]]")
+	}
+
 	result := strings.Join(resultRaw, "\n")
 
 	r.logger.Debug(fmt.Sprintln("Telegraf configuration result: \n" + result))
@@ -277,19 +283,16 @@ func (r *TelegrafMonitoringService) Refresh() error {
 	r.logger.Info("Stopping monitoring process...")
 	core.HandleError(r.stopProcess(), r.logger.Warn, "Failed stopping monitoring process")
 
-	if len(r.redisConf) == 0 {
-		if removeErr := os.Remove(r.confFullPath); removeErr != nil && !os.IsNotExist(removeErr) {
-			r.logger.Warn("Failed to remove " + r.confFullPath)
-		}
-		r.logger.Info("No redis instances to monitor, leaving monitoring process stopped")
-		return nil
-	}
-
 	r.logger.Debug("Building new telegraf.conf....")
 	updConfErr := r.updateTelegrafConfAndEnvironmentVariables(r.redisTelegrafConfigMap, r.redisConf)
 	if updConfErr != nil {
 		return updConfErr
 	}
-	r.logger.Info("Starting monitoring process....")
+
+	if len(r.redisConf) == 0 {
+		r.logger.Info("No redis instances to monitor, starting monitoring process with no-op config to keep metrics endpoint up")
+	} else {
+		r.logger.Info("Starting monitoring process....")
+	}
 	return r.startProcess()
 }
