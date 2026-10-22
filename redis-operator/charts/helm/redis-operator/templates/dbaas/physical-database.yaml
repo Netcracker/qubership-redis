@@ -1,0 +1,12 @@
+{{- if and .Values.dbaas.install (.Capabilities.APIVersions.Has "dbaas.netcracker.com/v1/PhysicalDatabase") }}
+apiVersion: dbaas.netcracker.com/v1
+kind: PhysicalDatabase
+metadata:
+  name: {{ .Release.Name }}-physical-db
+  namespace: {{ .Release.Namespace }}
+spec:
+  operatorNamespace: {{ required "DBaaS operator namespace is required" .Values.dbaas.declarativeRegistration.operatorNamespace | quote }}
+  adapterAddress: {{ printf "%s://dbaas-redis-adapter.%s:%s" (ternary "https" "http" .Values.redis.tls.enabled) .Release.Namespace (ternary "8443" "8080" .Values.redis.tls.enabled) | quote }}
+  credentialsSecretRef:
+    name: {{ required "Adapter credentials Secret name is required" .Values.dbaas.adapter.secretName | quote }}
+{{- end }}
