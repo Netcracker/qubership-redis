@@ -67,6 +67,7 @@ spec:
       createDBTimeout: {{ .Values.dbaas.adapter.createDBTimeout }}
       supportedFeatures:
         tls: {{ .Values.redis.tls.enabled }}
+        multiusers: false
 
     aggregator:
       address: {{ .Values.dbaas.aggregator.address }}
