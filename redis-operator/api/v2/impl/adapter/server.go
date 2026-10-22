@@ -17,6 +17,7 @@ import (
 	"github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/redis"
 	service "github.com/Netcracker/qubership-redis/redis-operator/dbaas/pkg/services"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"go.uber.org/zap"
 	v12 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -51,21 +52,31 @@ func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInt
 		},
 	}
 
-	basicRegistrationAuth := dao.BasicAuth{
-		Username: spec.Spec.Dbaas.Aggregator.Username,
-		Password: regPass,
-	}
+	declarativeRegistrationEnabled := spec.Spec.Dbaas.DeclarativeRegistrationEnabled
 
-	dbaasClient, err := dbaas.NewDbaasClient(spec.Spec.Dbaas.Aggregator.DbaasAggregatorRegistrationAddress, &basicRegistrationAuth, nil)
-	if err != nil {
-		log.Error(fmt.Sprintf("Failed to get DBaaS aggregator version, err %v. Setting default API version", err))
-	}
+	var dbaasClient *dbaas.Client
 
-	version, _ := dbaasClient.GetVersion() // if err != nil it will fail in the condition above
-	if version == "v3" {
+	if declarativeRegistrationEnabled {
 		apiVersion = "v2"
+		log.Info("Declarative registration enabled, skipping Aggregator initialization")
 	} else {
-		apiVersion = "v1"
+		basicRegistrationAuth := dao.BasicAuth{
+			Username: spec.Spec.Dbaas.Aggregator.Username,
+			Password: regPass,
+		}
+
+		var err error
+		dbaasClient, err = dbaas.NewDbaasClient(spec.Spec.Dbaas.Aggregator.DbaasAggregatorRegistrationAddress, &basicRegistrationAuth, nil)
+		if err != nil {
+			log.Error(fmt.Sprintf("Failed to get DBaaS aggregator version, err %v. Setting default API version", err))
+		}
+
+		version, _ := dbaasClient.GetVersion() // if err != nil it will fail in the condition above
+		if version == "v3" {
+			apiVersion = "v2"
+		} else {
+			apiVersion = "v1"
+		}
 	}
 
 	adminService := PrepareAdminService(spec, redisClient, kubeClient, runtimeScheme, log, namespace, apiVersion)
@@ -82,13 +93,10 @@ func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInt
 	)
 
 	app := func(app *fiber.App, ctx context.Context) error {
-		fiber2.BuildFiberDBaaSAdapterHandlers(
-			app,
-			spec.Spec.Dbaas.Adapter.Username,
-			apiPass,
-			appPath,
-			admService,
-			coreService.NewPhysicalRegistrationService(
+		var physicalService *coreService.PhysicalDatabaseRegistrationService
+
+		if !declarativeRegistrationEnabled {
+			physicalService = coreService.NewPhysicalRegistrationService(
 				appName,
 				log,
 				spec.Spec.Dbaas.Aggregator.PhysicalDatabaseIdentifier,
@@ -104,11 +112,36 @@ func RunDBaaSServer(spec *v2.DbaasRedisAdapter, redisClient redis.RedisClientInt
 				5000,
 				admService,
 				ctx,
-			),
+			)
+		}
+
+		fiber2.BuildFiberDBaaSAdapterHandlers(
+			app,
+			spec.Spec.Dbaas.Adapter.Username,
+			apiPass,
+			appPath,
+			admService,
+			physicalService,
 			nil,
 			supports.ToMap(),
 			log,
 			false, "")
+
+		operatorAuth := basicauth.New(basicauth.Config{
+			Users: map[string]string{
+				spec.Spec.Dbaas.Adapter.Username: apiPass,
+			},
+		})
+
+		app.Get("/api/v2/adapter/physical_database", operatorAuth,
+			GetPhysicalDatabaseHandler(
+				spec.Spec.Dbaas.Aggregator.PhysicalDatabaseIdentifier,
+				spec.Spec.Aggregator.PhysicalDatabaseLabels,
+				adminService.GetFeatures(),
+				adminService.GetSupportedRoles(),
+				"",
+			))
+
 		return nil
 	}
 

@@ -59,6 +59,7 @@ spec:
     {{- end }}
   dbaas:
     install: {{template "fromValuesThenEnvElseDefault" (dict "dotVar" .Values.dbaas.install "envVar" .Values.DBAAS_ENABLED "default" true ) }}
+    declarativeRegistrationEnabled: {{ and .Values.dbaas.install (.Capabilities.APIVersions.Has "dbaas.netcracker.com/v1/PhysicalDatabase") }}
     adapter:
       username: {{ .Values.dbaas.adapter.username | quote }}
       secretName: {{ .Values.dbaas.adapter.secretName }}

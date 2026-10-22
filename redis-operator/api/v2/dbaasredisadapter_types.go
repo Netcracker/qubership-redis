@@ -62,12 +62,12 @@ type DbaasRedisAdapterSpec struct {
 	Redis                     `json:"redis,omitempty"`
 	Monitoring                `json:"monitoringAgent,omitempty"`
 	RobotTests                `json:"robotTests"`
-	WaitTimeout               int                     `json:"waitTimeout,omitempty"`
-	PodSecurityContext        *v1.PodSecurityContext  `json:"securityContext,omitempty"`
-	Policies                  *Policies               `json:"policies,omitempty"`
-	DeploymentVersion         string                  `json:"deploymentVersion,omitempty"`
-	ServiceAccountName        string                  `json:"serviceAccountName"`
-	ImagePullPolicy           v1.PullPolicy           `json:"imagePullPolicy,omitempty" common:"true"`
+	WaitTimeout               int                    `json:"waitTimeout,omitempty"`
+	PodSecurityContext        *v1.PodSecurityContext `json:"securityContext,omitempty"`
+	Policies                  *Policies              `json:"policies,omitempty"`
+	DeploymentVersion         string                 `json:"deploymentVersion,omitempty"`
+	ServiceAccountName        string                 `json:"serviceAccountName"`
+	ImagePullPolicy           v1.PullPolicy          `json:"imagePullPolicy,omitempty" common:"true"`
 	TLS                       `json:"tls,omitempty" common:"true"`
 	DeploymentSessionId       string `json:"deploymentSessionId,omitempty"`
 	ArtifactDescriptorVersion string `json:"artifactDescriptorVersion,omitempty"`
@@ -94,10 +94,11 @@ type DbaasAggregator struct {
 }
 
 type Dbaas struct {
-	Install    bool             `json:"install"`
-	Adapter    *DbaasAdapter    `json:"adapter,omitempty"`
-	Aggregator *DbaasAggregator `json:"aggregator,omitempty"`
-	TLS        TLS              `json:"tls,omitempty" common:"true"`
+	Install                        bool             `json:"install"`
+	Adapter                        *DbaasAdapter    `json:"adapter,omitempty"`
+	Aggregator                     *DbaasAggregator `json:"aggregator,omitempty"`
+	TLS                            TLS              `json:"tls,omitempty" common:"true"`
+	DeclarativeRegistrationEnabled bool             `json:"declarativeRegistrationEnabled,omitempty"`
 }
 
 type Redis struct {
