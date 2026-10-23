@@ -124,6 +124,15 @@
           "$ref": "#/definitions/booleanOrString",
           "description": "Creates DBaaS adapter ingress resources. Requires CLOUD_PUBLIC_HOST."
         },
+        "declarativeRegistration": {
+          "type": "object",
+          "properties": {
+            "operatorNamespace": {
+              "type": "string",
+              "description": "Namespace of the DBaaS Operator that reconciles the declarative PhysicalDatabase CR, used only when the cluster exposes the dbaas.netcracker.com/v1/PhysicalDatabase API."
+            }
+          }
+        },
         "gatewayApi": {
           "type": "object",
           "properties": {

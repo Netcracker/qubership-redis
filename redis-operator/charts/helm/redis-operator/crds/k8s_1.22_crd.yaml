@@ -116,6 +116,8 @@ spec:
                       username:
                         type: string
                     type: object
+                  declarativeRegistrationEnabled:
+                    type: boolean
                   install:
                     type: boolean
                   tls:

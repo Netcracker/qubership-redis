@@ -44,6 +44,8 @@ operator:
 dbaas:
   install: true
   createIngress: false
+  declarativeRegistration:
+    operatorNamespace: dbaas
   gatewayApi:
     gatewayName: "default-external-gateway"
     gatewayNamespace: "gateway-system"
