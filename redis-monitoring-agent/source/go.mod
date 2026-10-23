@@ -3,7 +3,7 @@ module github.com/Netcracker/qubership-redis/redis-monitoring-agent
 go 1.26.6
 
 require (
-	github.com/Netcracker/qubership-nosqldb-operator-core v1.0.9
+	github.com/Netcracker/qubership-nosqldb-operator-core v1.0.14
 	github.com/adwpc/pagent v1.0.1
 	go.uber.org/zap v1.27.0
 	k8s.io/api v0.34.1
