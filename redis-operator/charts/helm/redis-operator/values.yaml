@@ -30,7 +30,7 @@ imagePullPolicy: Always
 
 DEPLOYMENT_SESSION_ID: "default-session-id"
 operator:
-  dockerImage: ghcr.io/netcracker/qubership-redis-operator:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-operator:99.99.99
   initImage: to_replace
   priorityClassName: ""
   resources:
@@ -95,8 +95,8 @@ redis:
       ca_crt:
   password: redis
   secretName: redis-credentials
-  dockerImage7: "ghcr.io/netcracker/qubership-docker-redis-7:main"
-  dockerImage: "ghcr.io/netcracker/qubership-docker-redis-8:main"
+  dockerImage7: "ghcr.io/netcracker/qubership-docker-redis-7:99.99.99"
+  dockerImage: "ghcr.io/netcracker/qubership-docker-redis-8:99.99.99"
   priorityClassName: ""
   nodeLabels:
   parameters:
@@ -160,7 +160,7 @@ redis:
 
 monitoringAgent:
   install: true
-  dockerImage: ghcr.io/netcracker/qubership-redis-monitoring-agent:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-monitoring-agent:99.99.99
   priorityClassName: ""
   nodeLabels:
   resources:
@@ -193,7 +193,7 @@ disasterRecovery:
 
 robotTests:
   install: false
-  dockerImage: ghcr.io/netcracker/qubership-redis-tests:main
+  dockerImage: ghcr.io/netcracker/qubership-redis-tests:99.99.99
   priorityClassName: ""
   tags:
   nodeLabels:
