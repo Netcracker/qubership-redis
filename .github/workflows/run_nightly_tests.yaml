@@ -1,0 +1,20 @@
+name: Run Nightly Redis Pipeline
+
+permissions:
+  contents: read
+  packages: read
+  actions: read
+
+on:
+  push
+#  schedule:
+#    - cron: '0 1 * * *'
+
+jobs:
+  Nightly-Redis-Pipeline:
+    uses: Netcracker/qubership-test-pipelines/.github/workflows/redis.yaml@feat/redis_pipeline  # v1.14.0
+    with:
+      #service_branch: 'main'
+      service_branch: '${{ github.head_ref || github.ref_name }}'
+      pipeline_branch: 'feat/redis_pipeline' # v1.14.0 renovate: depName=Netcracker/qubership-test-pipelines
+      scope: 'nightly'
