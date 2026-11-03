@@ -1,6 +1,6 @@
 ---
 name: troubleshooting-qubership-redis
-description: Diagnose Qubership Redis failures by matching an exact alert name, error string, or symptom to a section of references/troubleshooting.md. Covers the alerts defined in prometheus_alerts.yaml of the redis-operator chart (Redis node is down, Redis CPU Usage, Redis Memory Usage, latency, connections count) and failed robot integration tests (references/robot-tests.md).
+description: Diagnose Qubership Redis failures and Redis deployment failures by matching an exact alert name, error string, or symptom to a section of references/troubleshooting.md. Covers the alerts defined in prometheus_alerts.yaml of the redis-operator chart (Redis node is down, Redis CPU Usage, Redis Memory Usage, latency, connections count) and failed robot integration tests and failed RobotTests deployment(references/robot-tests.md).
 ---
 
 ## Finding the section

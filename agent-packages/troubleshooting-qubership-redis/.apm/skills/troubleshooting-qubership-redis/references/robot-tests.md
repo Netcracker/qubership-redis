@@ -79,7 +79,7 @@ The general failure signatures are:
 - `check_redis_images` reads expected image tags from the `tests-config` ConfigMap. If the ConfigMap is absent, the test is skipped.
 - If the test fails, a running container's image tag does not match the tag in the deploy descriptor. This usually indicates a partial upgrade. Check the `tests-config` ConfigMap content and compare with the actual pod images (request artifact if not provided).
 
-### 5. Operator reports `RobotTests failed`
+### 5. Operator reports `RobotTests failed` or `RobotTests deployment config processing failed`
 
 - The operator calls `helperImpl.WaitForTestsReady` on the `robot-tests` Deployment and fails if the Deployment does not reach a successful state within `spec.waitTimeout`.
 - Read `dbaas-redis-operator` logs for the `RobotTests failed` message and surrounding context (request artifact if not provided).
