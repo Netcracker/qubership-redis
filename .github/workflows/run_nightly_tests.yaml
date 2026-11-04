@@ -6,15 +6,13 @@ permissions:
   actions: read
 
 on:
-  push
-#  schedule:
-#    - cron: '0 1 * * *'
+  schedule:
+    - cron: '0 1 * * *'
 
 jobs:
   Nightly-Redis-Pipeline:
-    uses: Netcracker/qubership-test-pipelines/.github/workflows/redis.yaml@feat/redis_pipeline  # v1.14.0
+    uses: Netcracker/qubership-test-pipelines/.github/workflows/redis.yaml@d5786358e2e534552aa82fea2e419fe1e4a88df7  # v1.18.0
     with:
-      #service_branch: 'main'
       service_branch: '${{ github.head_ref || github.ref_name }}'
-      pipeline_branch: 'feat/redis_pipeline' # v1.14.0 renovate: depName=Netcracker/qubership-test-pipelines
+      pipeline_branch: 'd5786358e2e534552aa82fea2e419fe1e4a88df7' # v1.18.0 renovate: depName=Netcracker/qubership-test-pipelines
       scope: 'nightly'
