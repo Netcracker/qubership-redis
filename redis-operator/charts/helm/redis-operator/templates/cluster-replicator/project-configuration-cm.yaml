@@ -15,6 +15,7 @@ data:
             values:
               - "dbaas-redis-operator"
               - "redis-monitoring-agent"
+              - "robot-tests"
       - entity: "service/v1"
         filters:
           - type: "RemoveField"
