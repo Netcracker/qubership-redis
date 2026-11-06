@@ -1,2 +1,2 @@
 robotframework-requests
-redis==3.5.3
+redis==8.1.0
