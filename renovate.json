@@ -24,6 +24,12 @@
       "enabled": false
     },
     {
+      "description": ["Keep redis Docker images on their current major (7.x stays on 7, 8.x on 8)"],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["redis"],
+      "allowedVersions": "/^{{major}}(?:\\.|$|-)/"
+    },
+    {
       "description": ["Automerge non-major updates after all checks pass; major updates still need a manual review"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest", "pinDigest"],
       "automerge": true
