@@ -1,4 +1,6 @@
 {{- if and .Values.dbaas.install (.Capabilities.APIVersions.Has "dbaas.netcracker.com/v1/PhysicalDatabase") }}
+{{- /* Same rule as operator (utils.IsTLSEnableForDBAAS): adapter uses TLS only if redis.tls.enabled and registration address is https */}}
+{{- $adapterTLS := and .Values.redis.tls.enabled (contains "https" (include "fromEnv" (dict "envName" .Values.API_DBAAS_ADDRESS "default" .Values.dbaas.aggregator.dbaasAggregatorRegistrationAddress))) }}
 apiVersion: dbaas.netcracker.com/v1
 kind: PhysicalDatabase
 metadata:
@@ -6,7 +8,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   operatorNamespace: {{ required "DBaaS operator namespace is required" .Values.dbaas.declarativeRegistration.operatorNamespace | quote }}
-  adapterAddress: {{ printf "%s://dbaas-redis-adapter.%s:%s" (ternary "https" "http" .Values.redis.tls.enabled) .Release.Namespace (ternary "8443" "8080" .Values.redis.tls.enabled) | quote }}
+  adapterAddress: {{ printf "%s://dbaas-redis-adapter.%s:%s" (ternary "https" "http" $adapterTLS) .Release.Namespace (ternary "8443" "8080" $adapterTLS) | quote }}
   credentialsSecretRef:
     name: {{ required "Adapter credentials Secret name is required" .Values.dbaas.adapter.secretName | quote }}
 {{- end }}
