@@ -2,7 +2,7 @@ package adapter
 
 import (
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type PhysicalDatabaseInfo struct {
