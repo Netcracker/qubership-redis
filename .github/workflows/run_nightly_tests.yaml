@@ -11,7 +11,7 @@ on:
 
 jobs:
   Nightly-Redis-Pipeline:
-    uses: Netcracker/qubership-test-pipelines/.github/workflows/redis.yaml@422683f66379be6fa7557276b65e0e0babe02721 # v1.18.2
+    uses: Netcracker/qubership-test-pipelines/.github/workflows/redis.yaml@747df4a75b81fd05ed818a8cde6fc8198b2989c0 # v1.19.0
     with:
       service_branch: '${{ github.head_ref || github.ref_name }}'
       pipeline_branch: '51e6fa605dd96153f66ed87e676f99ac8fdab094' # v1.18.1 renovate: depName=Netcracker/qubership-test-pipelines
