@@ -53,7 +53,7 @@ jobs:
       contents: write
       packages: write
     secrets: inherit # zizmor: ignore[secrets-inherit]
-    uses: netcracker/qubership-workflow-hub/.github/workflows/re-infra-docker-build.yaml@cf536587a99a23b3614aa4db4bdbf13cf36059b6 # v2.8.3
+    uses: netcracker/qubership-workflow-hub/.github/workflows/re-infra-docker-build.yaml@b72b7f047fdb44ac85035f87b4d15d1cbdf2cb15 # v3.0.0
     with:
       config-file: ".github/docker-build-config.json"
       dry-run: ${{ github.event.inputs.dry-run || github.event_name == 'pull_request' }}
