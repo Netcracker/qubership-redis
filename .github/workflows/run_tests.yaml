@@ -47,7 +47,7 @@ jobs:
 
   Redis-Pipeline:
     needs: Wait-for-images
-    uses: Netcracker/qubership-test-pipelines/.github/workflows/redis.yaml@747df4a75b81fd05ed818a8cde6fc8198b2989c0 # v1.19.0
+    uses: Netcracker/qubership-test-pipelines/.github/workflows/redis.yaml@4ebc866a2ca5e308d2fad2e91de81a0aa6d42ba5 # v1.19.1
     with:
       repository_name: ${{ github.repository }}
       service_branch: '${{ github.head_ref || github.ref_name }}'
