@@ -1,13 +1,6 @@
-{{/* Sticky deploymentVersion: reuse from live CR; fallback to deterministic hash*/}}
-{{- $cr := lookup "netcracker.com/v2" "DbaasRedisAdapter" .Release.Namespace .Values.name -}}
-{{- $deploymentVersion := "" -}}
-{{- if $cr -}}
-  {{- $deploymentVersion = dig "spec" "deploymentVersion" "" $cr -}}
-{{- end -}}
-{{- if not $deploymentVersion -}}
-  {{- $seed := printf "%s|%s|%s" .Values.name .Release.Namespace (coalesce .Values.DEPLOYMENT_RESOURCE_NAME .Values.SERVICE_NAME) -}}
-  {{- $deploymentVersion = (sha256sum $seed | trunc 10) -}}
-{{- end -}}
+{{/* deploymentVersion: deterministic per deployment, changes with artifact version and deployment session */}}
+{{- $seed := printf "%s|%s|%s|%s|%s" .Values.name .Release.Namespace (coalesce .Values.DEPLOYMENT_RESOURCE_NAME .Values.SERVICE_NAME) .Values.ARTIFACT_DESCRIPTOR_VERSION .Values.DEPLOYMENT_SESSION_ID -}}
+{{- $deploymentVersion := sha256sum $seed | trunc 10 -}}
 apiVersion: netcracker.com/v2
 kind: DbaasRedisAdapter
 metadata:
